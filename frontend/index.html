@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Liga Deportiva de Barrio</title>
+    <meta name="description" content="Sistema de gestión integral para torneos y ligas de barrio: fixtures, equipos, planteles, registro de actas y tabla de posiciones en tiempo real." />
+    <meta property="og:title" content="Liga Deportiva de Barrio" />
+    <meta property="og:description" content="Sistema de gestión integral para torneos y ligas de barrio: fixtures, equipos, planteles, registro de actas y tabla de posiciones en tiempo real." />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons|Material+Icons+Outlined|Material+Icons+Round" rel="stylesheet">
+    <script>
+      // Evitar que errores no fatales de notificación en bucle de ResizeObserver detengan la app
+      (function() {
+        var isResizeObserver = function(err) {
+          if (!err) return false;
+          var msg = err.message || (typeof err === 'string' ? err : '');
+          return msg.indexOf('ResizeObserver') !== -1;
+        };
+        window.addEventListener('error', function(e) {
+          if (isResizeObserver(e) || (e.error && isResizeObserver(e.error))) {
+            e.stopImmediatePropagation();
+            e.preventDefault();
+            return true;
+          }
+        }, true);
+        window.addEventListener('unhandledrejection', function(e) {
+          if (e && (isResizeObserver(e.reason) || (e.reason && isResizeObserver(e.reason.message)))) {
+            e.stopImmediatePropagation();
+            e.preventDefault();
+          }
+        }, true);
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
