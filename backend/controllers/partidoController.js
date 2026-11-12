@@ -733,12 +733,31 @@ export const fijarMarcadorOrganizador = async (req, res) => {
     const listaCambios = Array.isArray(req.body.cambios) ? req.body.cambios : [];
 
     if (Array.isArray(req.body.goleadores) && req.body.goleadores.length > 0) {
-      for (const g of req.body.goleadores) {
+      const minutosRegistrados = [];
+      for (let idx = 0; idx < req.body.goleadores.length; idx++) {
+        const g = req.body.goleadores[idx];
+        const minutoGol = typeof g.minuto === 'number'
+          ? g.minuto
+          : (parseInt(String(g.minuto || '').replace(/[^0-9]/g, ''), 10) || 0);
+
+        if (minutoGol < 1 || minutoGol > 95) {
+          return res.status(400).json({
+            msg: `⚠️ Respeta las normas del marcador: El minuto del Gol #${idx + 1} (${minutoGol}') debe estar entre 1' y 95'.`
+          });
+        }
+
+        const choque = minutosRegistrados.find(prev => Math.abs(prev.minuto - minutoGol) < 5);
+        if (choque) {
+          return res.status(400).json({
+            msg: `⚠️ Respeta las normas del marcador: El Gol #${idx + 1} (Minuto ${minutoGol}') debe tener al menos 5 minutos de diferencia respecto al Gol #${choque.idx + 1} (Minuto ${choque.minuto}').`
+          });
+        }
+        minutosRegistrados.push({ idx, minuto: minutoGol });
+
         if (!g.jugadorId) continue;
         const jugDoc = await Jugador.findById(g.jugadorId);
         if (!jugDoc) continue;
 
-        const minutoGol = typeof g.minuto === 'number' ? g.minuto : (parseInt(String(g.minuto || '45').replace(/[^0-9]/g, ''), 10) || 45);
         const estaEnBanca = jugDoc.posicion === 'En Banca';
 
         if (estaEnBanca) {
@@ -746,14 +765,14 @@ export const fijarMarcadorOrganizador = async (req, res) => {
           const cambioDelJugador = listaCambios.find(c => String(c.jugadorEntraId) === String(jugDoc._id));
           if (!cambioDelJugador) {
             return res.status(400).json({
-              msg: `⚠️ REGLA REGLAMENTARIA: El futbolista "${jugDoc.nombre}" se encuentra registrado como suplente (En Banca). Para que un suplente anote un gol, debe registrarse un cambio oficial en el partido sustituyendo a un titular.`
+              msg: `⚠️ Respeta las normas del marcador: El futbolista "${jugDoc.nombre}" está como suplente (En Banca) y solo puede anotar si registras su cambio oficial.`
             });
           }
 
           const minutoCambio = Number(cambioDelJugador.minuto) || 60;
-          if (minutoGol < minutoCambio) {
+          if (minutoGol <= minutoCambio) {
             return res.status(400).json({
-              msg: `⚠️ REGLA CRONOLÓGICA DE SUSTITUCIÓN: El gol de "${jugDoc.nombre}" (Minuto ${minutoGol}') no puede ser anterior al minuto de su ingreso al campo (Cambio en Minuto ${minutoCambio}'). Los goles del suplente deben ser después de entrar a la cancha.`
+              msg: `⚠️ Respeta las normas del marcador: El gol de "${jugDoc.nombre}" (Minuto ${minutoGol}') debe ser posterior al minuto de su ingreso al campo (Cambio en Minuto ${minutoCambio}').`
             });
           }
         }
@@ -764,8 +783,13 @@ export const fijarMarcadorOrganizador = async (req, res) => {
     partido.golesVisitante = Number(golesVisitante) || 0;
     partido.asistenciasLocal = Number(asistenciasLocal) || 0;
     partido.asistenciasVisitante = Number(asistenciasVisitante) || 0;
+    partido.faltasLocal = Number(req.body.faltasLocal) || 0;
+    partido.faltasVisitante = Number(req.body.faltasVisitante) || 0;
     partido.estado = 'Finalizado';
     partido.cambios = Array.isArray(req.body.cambios) ? req.body.cambios : (partido.cambios || []);
+    if (Array.isArray(req.body.tarjetas)) {
+      partido.tarjetas = req.body.tarjetas;
+    }
 
     // Goleadores oficiales fijados por el Organizador (o autogenerados si no vinieron explícitos)
     if (Array.isArray(req.body.goleadores) && req.body.goleadores.length > 0) {
