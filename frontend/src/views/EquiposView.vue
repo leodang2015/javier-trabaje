@@ -233,9 +233,15 @@
                 </div>
 
                 <div class="row items-center q-gutter-xs">
-                  <q-btn
+                  <!-- Original:
+                  <q-btn unelevated color="indigo-7" text-color="white" no-caps :icon="matNumbers" label="Cambiar Dorsal" class="text-weight-bold shadow-1" @click="abrirDialogoCambioDorsal(miFichaJugador)" />
+                  <q-btn unelevated color="amber-9" text-color="white" no-caps :icon="matSwapHoriz" label="🔄 Cambiar de Equipo" class="text-weight-bold shadow-2" @click="abrirDialogoTraspaso">
+                    <q-tooltip>Solicita transferirte a otro club con la aprobación previa de tu DT y del DT de destino</q-tooltip>
+                  </q-btn>
+                  -->
+                  <AppActionButton
                     unelevated
-                    color="indigo-7"
+                    tone="indigo"
                     text-color="white"
                     no-caps
                     :icon="matNumbers"
@@ -243,9 +249,9 @@
                     class="text-weight-bold shadow-1"
                     @click="abrirDialogoCambioDorsal(miFichaJugador)"
                   />
-                  <q-btn
+                  <AppActionButton
                     unelevated
-                    color="amber-9"
+                    tone="warning"
                     text-color="white"
                     no-caps
                     :icon="matSwapHoriz"
@@ -628,6 +634,7 @@ import { ref, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
 import { useTorneo, ROLES } from '../store/torneo.js'
+import AppActionButton from '../components/AppActionButton.vue'
 import EquipoDialog from '../components/EquipoDialog.vue'
 import {
   matAdd,

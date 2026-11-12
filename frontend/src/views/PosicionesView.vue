@@ -364,7 +364,8 @@
                 {{ store.esOrganizador ? 'Partidos Recientes' : 'Partidos de tu Club' }}
               </span>
             </div>
-            <q-btn flat dense no-caps color="primary" label="Ver Fixture" to="/fixture" size="sm" :icon-right="matArrowForward" />
+            <!-- Original: <q-btn flat dense no-caps color="primary" label="Ver Fixture" to="/fixture" size="sm" :icon-right="matArrowForward" /> -->
+            <AppActionButton flat dense no-caps tone="primary" label="Ver Fixture" to="/fixture" size="sm" :icon-right="matArrowForward" />
           </q-card-section>
 
           <q-list separator class="match-mini-list">
@@ -423,7 +424,8 @@
               <q-icon :name="matMilitaryTech" size="18px" color="amber-9" class="q-mr-xs" />
               <span class="text-subtitle2 text-weight-bold text-dark">Top Goleadores</span>
             </div>
-            <q-btn flat dense no-caps color="primary" label="Ver Tabla" to="/ranking" size="sm" :icon-right="matArrowForward" />
+            <!-- Original: <q-btn flat dense no-caps color="primary" label="Ver Tabla" to="/ranking" size="sm" :icon-right="matArrowForward" /> -->
+            <AppActionButton flat dense no-caps tone="primary" label="Ver Tabla" to="/ranking" size="sm" :icon-right="matArrowForward" />
           </q-card-section>
 
           <q-list separator>
@@ -461,7 +463,8 @@
               <q-icon :name="matAutoAwesome" size="18px" color="blue-9" class="q-mr-xs" />
               <span class="text-subtitle2 text-weight-bold text-dark">Top Asistidores</span>
             </div>
-            <q-btn flat dense no-caps color="primary" label="Ver Ranking" to="/ranking" size="sm" :icon-right="matArrowForward" />
+            <!-- Original: <q-btn flat dense no-caps color="primary" label="Ver Ranking" to="/ranking" size="sm" :icon-right="matArrowForward" /> -->
+            <AppActionButton flat dense no-caps tone="primary" label="Ver Ranking" to="/ranking" size="sm" :icon-right="matArrowForward" />
           </q-card-section>
 
           <q-list separator>
@@ -499,6 +502,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useTorneo } from '../store/torneo.js'
+import AppActionButton from '../components/AppActionButton.vue'
 import {
   matSearch,
   matSports,
