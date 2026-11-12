@@ -260,7 +260,7 @@
                     @click="abrirDialogoTraspaso"
                   >
                     <q-tooltip>Solicita transferirte a otro club con la aprobación previa de tu DT y del DT de destino</q-tooltip>
-                  </q-btn>
+                  </AppActionButton>
                 </div>
               </div>
             </div>
@@ -648,7 +648,10 @@ import {
   matSports,
   matShield,
   matNumbers,
-  matEdit
+  matEdit,
+  matCheckCircle,
+  matClose,
+  matSwapHoriz
 } from '@quasar/extras/material-icons'
 
 const $q = useQuasar()

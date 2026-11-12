@@ -516,7 +516,8 @@ import {
   matShield,
   matSpeed,
   matLock,
-  matAutoAwesome
+  matAutoAwesome,
+  matTableChart
 } from '@quasar/extras/material-icons'
 
 const store = useTorneo()
