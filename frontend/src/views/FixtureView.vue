@@ -466,6 +466,11 @@
               </div>
             </div>
 
+            <!-- Advertencia Visible de Normas del Marcador -->
+            <div v-if="golesLocalInput > 0 || golesVisInput > 0" class="bg-amber-50 border border-amber-300 rounded-borders q-pa-xs text-caption text-amber-10 font-11">
+              ⚠️ <strong>Respeta las normas del marcador:</strong> Entre cada gol debe haber al menos <strong>5 minutos</strong> de diferencia (1'-95'), no puede haber dos eventos en el mismo minuto y los suplentes solo pueden anotar después de su cambio. <em>(Deja el minuto vacío para asignación automática)</em>.
+            </div>
+
             <!-- Goleadores y Asistidores Local -->
             <div v-if="golesLocalInput > 0" class="q-pa-sm bg-emerald-50/70 rounded border border-emerald-2 q-gutter-y-xs">
               <div class="text-caption text-weight-bold text-emerald-9 q-mb-xs">
@@ -1183,7 +1188,9 @@ function sincronizarGolesModal() {
         jugadorId: jug?.value || '',
         nombre: jug?.nombre || 'Jugador',
         dorsal: jug?.dorsal || '-',
-        asistenteId: ''
+        asistenteId: '',
+        minuto: null,
+        esAutogol: false
       })
     }
   } else if (diffLoc < 0) {
@@ -1199,7 +1206,9 @@ function sincronizarGolesModal() {
         jugadorId: jug?.value || '',
         nombre: jug?.nombre || 'Jugador',
         dorsal: jug?.dorsal || '-',
-        asistenteId: ''
+        asistenteId: '',
+        minuto: null,
+        esAutogol: false
       })
     }
   } else if (diffVis < 0) {
@@ -1577,7 +1586,10 @@ function autoDistribuirGoleadoresEnModal() {
     goleadoresLocalModal.value.push({
       jugadorId: jug?.value || '',
       nombre: jug?.nombre || 'Jugador',
-      dorsal: jug?.dorsal || '-'
+      dorsal: jug?.dorsal || '-',
+      asistenteId: '',
+      minuto: null,
+      esAutogol: false
     })
   }
 
@@ -1588,7 +1600,10 @@ function autoDistribuirGoleadoresEnModal() {
     goleadoresVisModal.value.push({
       jugadorId: jug?.value || '',
       nombre: jug?.nombre || 'Jugador',
-      dorsal: jug?.dorsal || '-'
+      dorsal: jug?.dorsal || '-',
+      asistenteId: '',
+      minuto: null,
+      esAutogol: false
     })
   }
 }
@@ -1617,6 +1632,8 @@ function abrirModalPuntuacion(p) {
   golesVisInput.value = Number(p.golesVisitante ?? 0)
   tarjetasOrganizadorModal.value = []
   cambiosOrganizadorModal.value = []
+  goleadoresLocalModal.value = []
+  goleadoresVisModal.value = []
   if (Array.isArray(p.cambios)) {
     cambiosOrganizadorModal.value = p.cambios.map(c => ({
       equipoId: c.equipo?._id || c.equipo || c.equipoId,
@@ -1648,8 +1665,10 @@ async function guardarPuntuacionPartido() {
     const optsVis = opcionesJugadores(p.visitanteId)
 
     goleadoresLocalModal.value.forEach((g, idx) => {
-      const jug = optsLoc.find(j => j.value === g.jugadorId) || optsLoc[idx % (optsLoc.length || 1)]
-      const foundAsist = g.asistenteId ? optsLoc.find(j => j.value === g.asistenteId) : null
+      const listaOrigen = g.esAutogol ? optsVis : optsLoc
+      const jug = listaOrigen.find(j => j.value === g.jugadorId) || listaOrigen[idx % (listaOrigen.length || 1)]
+      const foundAsist = !g.esAutogol && g.asistenteId ? optsLoc.find(j => j.value === g.asistenteId) : null
+      const tieneMinutoManual = g.minuto !== null && g.minuto !== undefined && g.minuto !== ''
       if (jug) {
         listaGoleadores.push({
           jugadorId: jug.value,
@@ -1660,15 +1679,19 @@ async function guardarPuntuacionPartido() {
           equipo: p.localId,
           equipoNombre: nombre(p.localId),
           goles: 1,
-          minuto: 0,
+          minuto: tieneMinutoManual ? Number(g.minuto) : 0,
+          _manualMinuto: tieneMinutoManual,
+          _etiquetaGol: `Gol #${idx + 1} (${nombre(p.localId)})`,
           esAutogol: Boolean(g.esAutogol)
         })
       }
     })
 
     goleadoresVisModal.value.forEach((g, idx) => {
-      const jug = optsVis.find(j => j.value === g.jugadorId) || optsVis[idx % (optsVis.length || 1)]
-      const foundAsist = g.asistenteId ? optsVis.find(j => j.value === g.asistenteId) : null
+      const listaOrigen = g.esAutogol ? optsLoc : optsVis
+      const jug = listaOrigen.find(j => j.value === g.jugadorId) || listaOrigen[idx % (listaOrigen.length || 1)]
+      const foundAsist = !g.esAutogol && g.asistenteId ? optsVis.find(j => j.value === g.asistenteId) : null
+      const tieneMinutoManual = g.minuto !== null && g.minuto !== undefined && g.minuto !== ''
       if (jug) {
         listaGoleadores.push({
           jugadorId: jug.value,
@@ -1679,21 +1702,21 @@ async function guardarPuntuacionPartido() {
           equipo: p.visitanteId,
           equipoNombre: nombre(p.visitanteId),
           goles: 1,
-          minuto: 0,
+          minuto: tieneMinutoManual ? Number(g.minuto) : 0,
+          _manualMinuto: tieneMinutoManual,
+          _etiquetaGol: `Gol #${idx + 1} (${nombre(p.visitanteId)})`,
           esAutogol: Boolean(g.esAutogol)
         })
       }
     })
 
-    // Separación obligatoria de mínimo 2 minutos entre CADA gol del partido
-    
     // REGLA: Si anota un suplente, verificar que entró en un cambio y que su gol sea posterior al cambio
     for (const g of listaGoleadores) {
       const jDoc = store.jugadores.find(j => String(j.id || j._id) === String(g.jugadorId))
       if (jDoc && String(jDoc.posicion || '').trim() === 'En Banca') {
         const cambio = cambiosOrganizadorModal.value.find(c => String(c.jugadorEntraId) === String(jDoc.id || jDoc._id))
         if (!cambio) {
-          throw new Error(`⚠️ REGLA OFICIAL: "${jDoc.nombre}" está En Banca. Solo puede anotar si registras su cambio oficial sustituyendo a un titular.`)
+          throw new Error(`⚠️ Respeta las normas del marcador: "${jDoc.nombre}" está En Banca. Solo puede anotar si registras su cambio oficial sustituyendo a un titular.`)
         }
       }
     }
@@ -1710,50 +1733,94 @@ async function guardarPuntuacionPartido() {
     const minutosEventosManuales = new Map()
     cambiosOrganizadorModal.value.forEach((c, cIdx) => {
       const minC = Number(c.minuto) || 60
+      if (minC < 1 || minC > 95) {
+        throw new Error(`⚠️ Respeta las normas del marcador: El Cambio #${cIdx + 1} debe tener un minuto válido entre 1' y 95'.`)
+      }
       if (minutosEventosManuales.has(minC)) {
-        throw new Error(`⚠️ REGLA DE TIEMPOS: El Cambio #${cIdx + 1} está en el Minuto ${minC}', pero ya existe otro evento en ese mismo minuto. Cada cambio o falta debe tener una diferencia de al menos 1 minuto.`)
+        throw new Error(`⚠️ Respeta las normas del marcador: El Cambio #${cIdx + 1} está en el Minuto ${minC}', pero ya existe otro evento en ese mismo minuto.`)
       }
       minutosEventosManuales.set(minC, `Cambio #${cIdx + 1}`)
     })
 
     tarjetasOrganizadorModal.value.forEach((t, tIdx) => {
       const minT = Number(t.minuto) || 30
+      if (minT < 1 || minT > 95) {
+        throw new Error(`⚠️ Respeta las normas del marcador: La Tarjeta/Falta #${tIdx + 1} debe tener un minuto válido entre 1' y 95'.`)
+      }
       if (minutosEventosManuales.has(minT)) {
-        throw new Error(`⚠️ REGLA DE TIEMPOS: La Tarjeta/Falta #${tIdx + 1} está en el Minuto ${minT}', coincidiendo con "${minutosEventosManuales.get(minT)}". No puede haber dos eventos en el mismo minuto.`)
+        throw new Error(`⚠️ Respeta las normas del marcador: La Tarjeta/Falta #${tIdx + 1} está en el Minuto ${minT}', coincidiendo con "${minutosEventosManuales.get(minT)}".`)
       }
       minutosEventosManuales.set(minT, `Tarjeta/Falta #${tIdx + 1}`)
     })
 
-    // B. Asignar minutos a los goles garantizando 5 MINUTOS entre goles y 1 minuto libre de otros eventos
-    const minutosOcupadosGlobal = new Set(minutosEventosManuales.keys())
-    const totalG = listaGoleadores.length
-
-    if (totalG > 0) {
-      let minCursor = 12 + Math.floor(Math.random() * 3)
-
-      for (let i = 0; i < totalG; i++) {
-        const item = listaGoleadores[i]
+    // B. Validar los minutos ingresados manualmente para los goles
+    const minutosGolesManuales = []
+    for (const item of listaGoleadores) {
+      if (item._manualMinuto) {
+        const m = Number(item.minuto)
+        if (!Number.isFinite(m) || m < 1 || m > 95) {
+          throw new Error(`⚠️ Respeta las normas del marcador: El minuto de ${item._etiquetaGol} debe estar entre 1' y 95'.`)
+        }
+        if (minutosEventosManuales.has(m)) {
+          throw new Error(`⚠️ Respeta las normas del marcador: ${item._etiquetaGol} (Minuto ${m}') coincide con "${minutosEventosManuales.get(m)}". No puede haber dos eventos en el mismo minuto.`)
+        }
+        const choqueGol = minutosGolesManuales.find(prev => Math.abs(prev.minuto - m) < 5)
+        if (choqueGol) {
+          throw new Error(`⚠️ Respeta las normas del marcador: ${item._etiquetaGol} (Minuto ${m}') no cumple la separación mínima de 5 minutos respecto a ${choqueGol.etiqueta} (Minuto ${choqueGol.minuto}').`)
+        }
         const jDoc = store.jugadores.find(j => String(j.id || j._id) === String(item.jugadorId))
         const cambio = jDoc && String(jDoc.posicion || '').trim() === 'En Banca'
           ? cambiosOrganizadorModal.value.find(c => String(c.jugadorEntraId) === String(jDoc.id || jDoc._id))
           : null
-
-        // Si es suplente, su gol DEBE ser después del minuto del cambio (+ 1 minuto mínimo)
         if (cambio) {
           const minCambio = Number(cambio.minuto) || 60
-          minCursor = Math.max(minCursor, minCambio + 1)
+          if (m <= minCambio) {
+            throw new Error(`⚠️ Respeta las normas del marcador: El gol de "${jDoc.nombre}" (Minuto ${m}') debe ser posterior a su cambio (Minuto ${minCambio}').`)
+          }
         }
+        minutosGolesManuales.push({ minuto: m, etiqueta: item._etiquetaGol })
+      }
+    }
 
-        // Buscar el primer minuto libre que no choque con cambios ni faltas
-        while (minutosOcupadosGlobal.has(minCursor) && minCursor <= 90) {
-          minCursor += 1
+    // C. Asignar minutos automáticos solo a los goles dejados en "Auto", respetando >= 5 min con todos los goles y sin chocar con otros eventos
+    const minutosOcupadosGlobal = new Set(minutosEventosManuales.keys())
+    const minutosTodosGoles = minutosGolesManuales.map(g => g.minuto)
+    minutosTodosGoles.forEach(m => minutosOcupadosGlobal.add(m))
+
+    if (listaGoleadores.length > 0) {
+      let minCursor = 12 + Math.floor(Math.random() * 3)
+
+      for (let i = 0; i < listaGoleadores.length; i++) {
+        const item = listaGoleadores[i]
+        if (!item._manualMinuto) {
+          const jDoc = store.jugadores.find(j => String(j.id || j._id) === String(item.jugadorId))
+          const cambio = jDoc && String(jDoc.posicion || '').trim() === 'En Banca'
+            ? cambiosOrganizadorModal.value.find(c => String(c.jugadorEntraId) === String(jDoc.id || jDoc._id))
+            : null
+
+          if (cambio) {
+            const minCambio = Number(cambio.minuto) || 60
+            minCursor = Math.max(minCursor, minCambio + 1)
+          }
+
+          while (
+            minCursor <= 95 &&
+            (minutosOcupadosGlobal.has(minCursor) || minutosTodosGoles.some(gm => Math.abs(gm - minCursor) < 5))
+          ) {
+            minCursor += 1
+          }
+
+          if (minCursor > 95) {
+            throw new Error('⚠️ Respeta las normas del marcador: No hay minutos reglamentarios disponibles (1\'-95\') para separar todos los goles por al menos 5 minutos.')
+          }
+
+          item.minuto = minCursor
+          minutosOcupadosGlobal.add(item.minuto)
+          minutosTodosGoles.push(item.minuto)
+          minCursor = item.minuto + 5
         }
-
-        item.minuto = Math.min(90, minCursor)
-        minutosOcupadosGlobal.add(item.minuto)
-
-        // Próximo gol: OBLIGATORIO al menos 5 minutos después del gol actual
-        minCursor = item.minuto + 5
+        delete item._manualMinuto
+        delete item._etiquetaGol
       }
 
       // Ordenar goles cronológicamente
@@ -1776,15 +1843,16 @@ async function guardarPuntuacionPartido() {
         tipo: t.tipo,
         jugadorId: t.jugadorId,
         nombre: j ? j.nombre : 'Jugador',
-        dorsal: j ? (j.numero ?? j.dorsal) : '-'
+        dorsal: j ? (j.numero ?? j.dorsal) : '-',
+        minuto: Number(t.minuto) || 30
       }
     })
 
     await store.fijarMarcadorOrganizador(pId, {
       golesLocal: Number(golesLocalInput.value) || 0,
       golesVisitante: Number(golesVisInput.value) || 0,
-      asistenciasLocal: listaGoleadores.filter(g => g.asistenteId && String(g.equipoId) === String(p.localId)).length,
-      asistenciasVisitante: listaGoleadores.filter(g => g.asistenteId && String(g.equipoId) === String(p.visitanteId)).length,
+      asistenciasLocal: listaGoleadores.filter(g => g.asistenteId && String(g.equipo) === String(p.localId)).length,
+      asistenciasVisitante: listaGoleadores.filter(g => g.asistenteId && String(g.equipo) === String(p.visitanteId)).length,
       faltasLocal: faltasLoc,
       faltasVisitante: faltasVis,
       goleadores: listaGoleadores,
@@ -1805,12 +1873,14 @@ async function guardarPuntuacionPartido() {
       timeout: 3500
     })
   } catch (err) {
+    const msg = err.response?.data?.msg || err.message || 'Error al guardar puntuación'
+    const esAdvertenciaNorma = msg.includes('normas del marcador') || msg.includes('REGLA')
     $q.notify({
-      type: 'negative',
-      icon: 'error',
-      message: err.message || 'Error al guardar puntuación',
+      type: esAdvertenciaNorma ? 'warning' : 'negative',
+      icon: esAdvertenciaNorma ? 'warning' : 'error',
+      message: msg,
       position: 'top',
-      timeout: 3500
+      timeout: 5500
     })
   } finally {
     guardandoPuntuacion.value = false

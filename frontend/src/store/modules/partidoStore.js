@@ -243,10 +243,34 @@ export async function guardarPartido(datos) {
   return res.data
 }
 
-export async function fijarMarcadorOrganizador({ partidoId, golesLocal, golesVisitante, listaGoleadores = [], tarjetas = [], sustituciones = [], faltasLocal = 0, faltasVisitante = 0 }) {
+export async function fijarMarcadorOrganizador(param1, param2) {
+  let partidoId
+  let payload
+  if (typeof param1 === 'object' && param1 !== null) {
+    partidoId = param1.partidoId || param1.id
+    payload = param1
+  } else {
+    partidoId = param1
+    payload = param2 || {}
+  }
+
+  const idLimpio = idDe(partidoId)
+  const listaGoleadores = payload.goleadores || payload.listaGoleadores || []
+  const listaCambios = payload.cambios || payload.sustituciones || []
+
   const res = await axios.patch(
-    `${API_URL}/partidos/${partidoId}/marcador-organizador`,
-    { golesLocal, golesVisitante, goleadores: listaGoleadores, tarjetas, sustituciones, faltasLocal, faltasVisitante },
+    `${API_URL}/partidos/${idLimpio}/marcador-organizador`,
+    {
+      golesLocal: Number(payload.golesLocal) || 0,
+      golesVisitante: Number(payload.golesVisitante) || 0,
+      asistenciasLocal: Number(payload.asistenciasLocal) || 0,
+      asistenciasVisitante: Number(payload.asistenciasVisitante) || 0,
+      faltasLocal: Number(payload.faltasLocal) || 0,
+      faltasVisitante: Number(payload.faltasVisitante) || 0,
+      goleadores: listaGoleadores,
+      cambios: listaCambios,
+      tarjetas: payload.tarjetas || []
+    },
     { headers: authHeaders() }
   )
   await cargarPartidos()
