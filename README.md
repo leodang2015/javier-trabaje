@@ -58,6 +58,17 @@ frontend/src/store/
 
 ---
 
+## 🧩 Componentes Reutilizables de Interfaz
+
+La carpeta `frontend/src/components/` contiene tanto diálogos como componentes visuales compartidos:
+
+- **`AppActionButton.vue`** envuelve el botón de Quasar y centraliza color, tipografía y bordes. Se utiliza en las vistas de inscripción, posiciones y equipos; las acciones y rutas siguen definidas por cada vista.
+- **`RankingTableCard.vue`** presenta una tabla de ranking y **`RankingScoreBadge.vue`** muestra los goles o las asistencias. `RankingView.vue` reutiliza la tarjeta para cada tabla.
+
+Los tonos, la familia y el peso tipográficos, el espaciado entre letras y el redondeo se pueden ajustar mediante las propiedades del botón compartido. Más detalles y ejemplos están en [CAMBIOS_COMPONENTES_REUTILIZABLES.md](./CAMBIOS_COMPONENTES_REUTILIZABLES.md).
+
+---
+
 ## 🛠️ Stack Tecnológico
 
 - **Frontend**: Vue.js 3 (`<script setup>`, Composition API)
@@ -86,7 +97,10 @@ frontend/src/store/
 │   │   ├── App.vue            # Layout principal, barra de navegación, campana y Login/Registro
 │   │   ├── store/             # Store modular (auth, equipo, jugador, partido, torneo)
 │   │   ├── views/             # Vistas (Posiciones, Fixture, Equipos, Ranking, Entrenador)
-│   │   └── components/        # Modales y diálogos reutilizables
+│   │   └── components/        # Diálogos y componentes visuales reutilizables
+│   │       ├── AppActionButton.vue
+│   │       ├── RankingTableCard.vue
+│   │       └── RankingScoreBadge.vue
 │
 └── backend/                   # API RESTful (Node.js + Express)
     ├── controllers/           # Lógica del negocio y reglas reglamentarias

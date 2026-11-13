@@ -3,6 +3,8 @@
 
 En este torneo de fútbol barrial rige una **separación estricta de poderes y funciones** respaldada por control de acceso basado en roles (**Role-Based Access Control - RBAC**). Cada participante cuenta con facultades exclusivas, responsabilidades intransferibles y límites éticos claros para garantizar la imparcialidad deportiva y la integridad de la base de datos en MongoDB Atlas.
 
+> **Nota de interfaz:** los componentes visuales reutilizables, como `AppActionButton.vue`, centralizan la presentación de algunos botones, pero no conceden permisos ni modifican las reglas RBAC. Las condiciones de cada acción siguen dependiendo del rol y la lógica de la vista. Consulta [CAMBIOS_COMPONENTES_REUTILIZABLES.md](./CAMBIOS_COMPONENTES_REUTILIZABLES.md) para conocer su uso y personalización.
+
 ---
 
 ## 📊 Cuadro Comparativo de Responsabilidades

@@ -107,10 +107,13 @@ Este documento está estructurado para responder de forma precisa, profesional y
 │       │   │   ├── partidoStore.js  # Partido.js (Fixture, goles y tabla)
 │       │   │   └── torneoStore.js   # Torneo.js y Notificaciones
 │       │   └── torneo.js      # Orquestador reactivo unificado (useTorneo)
-│       ├── components/        # Componentes modulares reutilizables
-│       │   ├── PartidoDialog.vue   # Modal de creación y configuración de partidos
-│       │   ├── EquipoDialog.vue    # Modal de creación de clubes
-│       │   └── JugadorDialog.vue   # Modal de registro e inscripción de futbolistas
+│       ├── components/        # Diálogos y componentes visuales reutilizables
+│       │   ├── AppActionButton.vue     # Botón compartido con estilos configurables
+│       │   ├── RankingTableCard.vue    # Tarjeta reutilizable de cada tabla de ranking
+│       │   ├── RankingScoreBadge.vue   # Indicador de goles o asistencias
+│       │   ├── PartidoDialog.vue       # Modal de creación y configuración de partidos
+│       │   ├── EquipoDialog.vue        # Modal de creación de clubes
+│       │   └── JugadorDialog.vue       # Modal de registro e inscripción de futbolistas
 │       └── views/             # Vistas de página principales
 │           ├── PosicionesView.vue  # Tabla de posiciones con racha y métricas
 │           ├── FixtureView.vue     # Calendario de partidos y carga de actas (440px)
@@ -131,6 +134,12 @@ Este documento está estructurado para responder de forma precisa, profesional y
     ├── controllers/           # Lógica de negocio y reglas reglamentarias
     └── middlewares/           # Validación de autenticación JWT y roles
 ```
+
+### Componentes compartidos de interfaz
+
+`AppActionButton.vue` reutiliza el botón de Quasar en las vistas de inscripción, posiciones y equipos. Centraliza colores, tipografía y redondeo, mientras cada vista conserva sus propias rutas, condiciones por rol y eventos. Las vistas que no usan este componente mantienen sus botones actuales.
+
+En Ranking, `RankingView.vue` conserva los cálculos de goleadores y asistidores y delega la presentación en `RankingTableCard.vue`; cada cifra se representa con `RankingScoreBadge.vue`. Esta separación permite ajustar la presentación sin duplicar la estructura de la tabla.
 
 **¿Por qué se organizó así?**
 > *"Adoptamos una arquitectura desacoplada por responsabilidades (**Separation of Concerns**). En el backend, `controllers` concentra estrictamente las reglas del negocio futbolístico, `routes` expone los endpoints limpios y `models` garantiza la integridad de datos en MongoDB Atlas. En el frontend, separamos las `views` de los `components`, y modularizamos el `store` en submódulos que reflejan directamente cada entidad de la base de datos, canalizados a través de `torneo.js` para asegurar coherencia en tiempo real en toda la interfaz."*
