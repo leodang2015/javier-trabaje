@@ -98,6 +98,7 @@ Este documento está estructurado para responder de forma precisa, profesional y
 │       ├── main.js            # Inicialización de Vue, Pinia/Store y Quasar
 │       ├── App.vue            # Layout principal, barra de navegación, campana y Login/Registro
 │       ├── router/            # Definición de rutas del sistema
+│       ├── torneo.js          # Reexporta el store para mantener compatibilidad con imports anteriores
 │       ├── store/             # STORE MODULAR (1:1 con modelos de MongoDB)
 │       │   ├── api.js         # Configuración Axios y tokens JWT
 │       │   ├── modules/       # Módulos especializados
@@ -134,6 +135,8 @@ Este documento está estructurado para responder de forma precisa, profesional y
     ├── controllers/           # Lógica de negocio y reglas reglamentarias
     └── middlewares/           # Validación de autenticación JWT y roles
 ```
+
+Hay dos archivos llamados `torneo.js`, pero no mantienen estados separados: `frontend/src/store/torneo.js` contiene la implementación del store y `frontend/src/torneo.js` solo reexporta sus símbolos para compatibilidad. Las vistas actuales importan directamente desde `store/torneo.js`; el archivo de `src/` puede seguir atendiendo imports antiguos sin duplicar la instancia del estado.
 
 ### Componentes compartidos de interfaz
 

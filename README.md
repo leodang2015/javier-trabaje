@@ -56,6 +56,8 @@ frontend/src/store/
 └── torneo.js                # Orquestador unificado y reactivo con retrocompatibilidad (useTorneo)
 ```
 
+También existe `frontend/src/torneo.js`, que funciona como una capa de compatibilidad y reexporta desde `frontend/src/store/torneo.js`. La implementación y el estado compartido están en `store/torneo.js`; ambos caminos apuntan al mismo módulo, no crean dos stores independientes.
+
 ---
 
 ## 🧩 Componentes Reutilizables de Interfaz
