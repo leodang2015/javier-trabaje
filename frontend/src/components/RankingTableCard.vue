@@ -3,12 +3,12 @@
     <q-card flat bordered class="bg-white rounded-borders overflow-hidden ranking-card">
       <q-card-section class="row items-center justify-between q-py-md bg-slate-50 border-b">
         <div class="row items-center">
-          <q-avatar size="32px" :color="tabla.avatarBg" :text-color="tabla.avatarColor" class="q-mr-sm">
-            <q-icon :name="tabla.icon" size="18px" />
+          <q-avatar size="32px" :color="tablaActual.avatarBg" :text-color="tablaActual.avatarColor" class="q-mr-sm">
+            <q-icon :name="tablaActual.icon" size="18px" />
           </q-avatar>
           <div>
-            <div class="text-subtitle1 text-weight-bold text-dark">{{ tabla.titulo }}</div>
-            <div class="text-caption text-grey-6">{{ tabla.subtitulo }}</div>
+            <div class="text-subtitle1 text-weight-bold text-dark">{{ tablaActual.titulo }}</div>
+            <div class="text-caption text-grey-6">{{ tablaActual.subtitulo }}</div>
           </div>
         </div>
         <span class="text-caption text-weight-bold text-grey-5 uppercase font-mono">TOP 10</span>
@@ -21,11 +21,11 @@
               <th class="th-pos text-center">Rank</th>
               <th class="th-player text-left">Jugador</th>
               <th class="th-club text-left">Club</th>
-              <th class="th-count text-right">{{ tabla.label }}</th>
+              <th class="th-count text-right">{{ tablaActual.label }}</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="(jugador, indice) in tabla.datos" :key="jugador.id" class="ranking-row">
+            <tr v-for="(jugador, indice) in tablaActual.datos" :key="jugador.id" class="ranking-row">
               <td class="text-center font-mono td-pos">
                 <span
                   class="rank-badge"
@@ -62,13 +62,13 @@
               </td>
 
               <td class="text-right font-mono td-score text-weight-bolder">
-                <RankingScoreBadge :valor="jugador[tabla.campo] ?? 0" :campo="tabla.campo" />
+                <RankingScoreBadge :valor="jugador[tablaActual.campo] ?? 0" :campo="tablaActual.campo" />
               </td>
             </tr>
 
-            <tr v-if="!tabla.datos.length">
+            <tr v-if="!tablaActual.datos.length">
               <td colspan="4" class="text-center q-py-xl text-grey-6">
-                <q-icon :name="tabla.icon" size="36px" color="grey-4" class="q-mb-xs" />
+                <q-icon :name="tablaActual.icon" size="36px" color="grey-4" class="q-mb-xs" />
                 <div class="text-body2 text-weight-medium">Sin registros computados aún.</div>
                 <div class="text-caption text-grey-5">
                   Los datos se actualizarán automáticamente a medida que se carguen partidos.
@@ -83,14 +83,32 @@
 </template>
 
 <script setup>
+import { computed } from 'vue'
 import { useTorneo } from '../store/torneo.js'
 import RankingScoreBadge from './RankingScoreBadge.vue'
 
-defineProps({
+const props = defineProps({
+  modelValue: {
+    type: Object,
+    default: null
+  },
   tabla: {
     type: Object,
-    required: true
+    default: null
   }
+})
+
+defineEmits(['update:modelValue'])
+
+const tablaActual = computed(() => props.modelValue || props.tabla || {
+  titulo: '',
+  subtitulo: '',
+  icon: '',
+  avatarBg: 'grey-2',
+  avatarColor: 'grey-8',
+  campo: 'goles',
+  label: 'Total',
+  datos: []
 })
 
 const store = useTorneo()

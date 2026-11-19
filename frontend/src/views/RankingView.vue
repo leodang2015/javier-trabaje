@@ -83,7 +83,8 @@
   -->
   <div class="ranking-view">
     <div class="row q-col-gutter-lg">
-      <RankingTableCard v-for="tabla in tablas" :key="tabla.titulo" :tabla="tabla" />
+      <RankingTableCard v-model="tablaGoleadores" />
+      <RankingTableCard v-model="tablaAsistidores" />
     </div>
   </div>
 </template>
@@ -114,8 +115,8 @@ const asistidoresFiltrados = computed(() => {
   return list
 })
 
-const tablas = computed(() => [
-  {
+const tablaGoleadores = computed({
+  get: () => ({
     titulo: (store.esJugador || store.esEntrenador) ? `Goleadores de tu Club (${store.miEquipo?.nombre || 'Mi Equipo'})` : 'Tabla de Goleadores',
     subtitulo: (store.esJugador || store.esEntrenador) ? 'Anotadores oficiales de tu plantel' : 'Máximos artilleros del torneo',
     icon: matLocalFireDepartment,
@@ -124,8 +125,12 @@ const tablas = computed(() => [
     campo: 'goles',
     label: 'Goles',
     datos: goleadoresFiltrados.value
-  },
-  {
+  }),
+  set: () => {}
+})
+
+const tablaAsistidores = computed({
+  get: () => ({
     titulo: (store.esJugador || store.esEntrenador) ? `Asistidores de tu Club (${store.miEquipo?.nombre || 'Mi Equipo'})` : 'Máximos Asistidores',
     subtitulo: (store.esJugador || store.esEntrenador) ? 'Líderes en pases gol de tu plantel' : 'Líderes en pases gol y juego colectivo',
     icon: matAutoAwesome,
@@ -134,7 +139,8 @@ const tablas = computed(() => [
     campo: 'asistencias',
     label: 'Asistencias',
     datos: asistidoresFiltrados.value
-  }
-])
+  }),
+  set: () => {}
+})
 
 </script>

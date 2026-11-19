@@ -10,14 +10,14 @@ Se separaron elementos de interfaz repetidos en componentes de Vue para que sus 
 - `frontend/src/views/PosicionesView.vue`: accesos al fixture y al ranking.
 - `frontend/src/views/EquiposView.vue`: cambio de dorsal y solicitud de cambio de equipo.
 
-El componente reenvía al botón de Quasar sus atributos y eventos habituales, como `label`, `icon`, `to`, `@click`, `loading` y `disable`. También centraliza opciones de presentación:
+El componente reenvía al botón de Quasar sus atributos y eventos habituales, enfocándose en el manejo de eventos con `@` (`@click="emit('click', $event)"` y `defineEmits(['click'])`). También centraliza opciones de presentación:
 
 - `tone`: paleta semántica (`primary`, `dark`, `neutral`, `indigo` o `warning`), traducida a colores de Quasar en el componente.
 - `color`: color de Quasar opcional que prevalece sobre `tone`.
 - `fontFamily`, `fontWeight` y `letterSpacing`: tipografía.
 - `borderRadius`: redondeo de las esquinas.
 
-Por ejemplo:
+Por ejemplo, usando únicamente `@click` para la interacción:
 
 ```vue
 <AppActionButton
@@ -28,16 +28,16 @@ Por ejemplo:
 />
 ```
 
-Para ajustar el estilo predeterminado de todos los usos, se pueden cambiar los valores iniciales y el mapa de colores dentro de `AppActionButton.vue`. Para personalizar un solo botón se pueden pasar props:
+Para ajustar el estilo predeterminado de todos los usos, se pueden cambiar los valores iniciales y el mapa de colores dentro de `AppActionButton.vue`. Para personalizar un solo botón se pueden pasar opciones en la etiqueta:
 
 ```vue
 <AppActionButton
   tone="warning"
   font-family="Arial, sans-serif"
-  :font-weight="600"
   letter-spacing="0.03em"
   border-radius="12px"
   label="Confirmar"
+  @click="confirmar"
 />
 ```
 
@@ -49,13 +49,13 @@ Aquí están las ubicaciones concretas dentro del proyecto. Los números indican
 
 | Archivo | Dónde encontrar el cambio |
 | --- | --- |
-| `frontend/src/components/AppActionButton.vue` | Envoltura de Quasar y estilos del botón: líneas 1–64; props: líneas 20–45; mapa de colores: líneas 47–53. |
-| `frontend/src/views/InscripcionView.vue` | Botones reutilizables en el bloque de éxito: líneas 37–61; botón de confirmar inscripción: líneas 171–184; importación del componente: línea 225. |
+| `frontend/src/components/AppActionButton.vue` | Envoltura de Quasar y estilos del botón: líneas 1–70; emisión `@click`: líneas 12 y 21; props: líneas 23–48; mapa de colores: líneas 50–56. |
+| `frontend/src/views/InscripcionView.vue` | Botones reutilizables en el bloque de éxito: líneas 37–60; botón de confirmar inscripción: líneas 171–184; importación del componente: línea 225. |
 | `frontend/src/views/PosicionesView.vue` | Botones de acceso rápido a Fixture, Tabla y Ranking: líneas 368, 428 y 467; importación: línea 505. |
-| `frontend/src/views/EquiposView.vue` | Botones “Cambiar Dorsal” y “Cambiar de Equipo”: líneas 242–263; importación: línea 637. |
-| `frontend/src/views/RankingView.vue` | La lista usa `RankingTableCard`: línea 86; importación: línea 95; marcado original comentado al inicio del archivo. |
-| `frontend/src/components/RankingTableCard.vue` | Estructura de tarjeta y tabla: líneas 1–83; estilos de tabla: desde la línea 107; incluye `RankingScoreBadge` en la línea 65. |
-| `frontend/src/components/RankingScoreBadge.vue` | Presentación del valor de goles/asistencias: líneas 1–26. |
+| `frontend/src/views/EquiposView.vue` | Botones de dorsal y traspaso: líneas 217–227 y 263–284; importación: línea 658. |
+| `frontend/src/views/RankingView.vue` | Uso de `RankingTableCard` con `v-model`: líneas 86–87; importación: línea 96; objetos `tablaGoleadores` y `tablaAsistidores`: líneas 118–144; marcado original comentado: líneas 2–83. |
+| `frontend/src/components/RankingTableCard.vue` | Estructura de tarjeta y tabla: líneas 1–83; soporte `v-model` (`modelValue` y `update:modelValue`): líneas 90–112; estilos de tabla: líneas 125–197; incluye `RankingScoreBadge` con `:` en la línea 65. |
+| `frontend/src/components/RankingScoreBadge.vue` | Presentación del valor de goles/asistencias recibido mediante `:`: líneas 1–28. |
 
 `frontend/src/views/FixtureView.vue` no se modificó para estos cambios; sus botones y estilos permanecen como estaban.
 
@@ -65,10 +65,26 @@ Los botones que se actualizaron en cada vista conservan sus acciones, rutas y co
 
 En `frontend/src/views/RankingView.vue`, la presentación se delega a estos componentes:
 
-- `frontend/src/components/RankingTableCard.vue`: muestra la tarjeta, el encabezado, la tabla, los jugadores y el estado vacío. Recibe los datos mediante la prop `tabla`.
-- `frontend/src/components/RankingScoreBadge.vue`: presenta el valor estadístico con su color e icono. Recibe `valor` y `campo`; distingue goles de asistencias.
+- `frontend/src/components/RankingTableCard.vue`: muestra la tarjeta, el encabezado, la tabla, los jugadores y el estado vacío. Se conecta con la vista padre únicamente mediante `v-model` (`v-model="tablaGoleadores"` y `v-model="tablaAsistidores"`).
+- `frontend/src/components/RankingScoreBadge.vue`: presenta el valor estadístico con su color e icono. Recibe sus datos dinámicos mediante `:` (`:valor` y `:campo`) para distinguir goles de asistencias.
 
 La vista conserva el cálculo y filtrado de goleadores y asistidores. Las clases y estilos de la tabla se trasladaron junto con su estructura a `RankingTableCard.vue` para mantener la apariencia existente. Cada fila usa `RankingScoreBadge.vue` para mostrar el total correspondiente.
+
+## Por qué existen `@`, `v-model` y `:` (uno por componente)
+
+En Vue cada símbolo cumple un propósito distinto en la comunicación entre vistas y componentes, por lo que cada uno de los 3 componentes reutilizables se enfocó en **una sola** de estas directivas:
+
+1. **`@` (`v-on`) → en `AppActionButton.vue` (`@click`)**
+   - **Por qué existe:** `@` escucha eventos que suben del componente hijo (o del navegador) hacia la vista padre. En Vue un clic se escribe con `@click` y no con `:click`, porque `:` solo pasa datos hacia abajo y `@` ejecuta una función cuando ocurre la interacción del usuario.
+   - **Cómo se usa:** `AppActionButton.vue` declara `defineEmits(['click'])` y reenvía `@click="emit('click', $event)"` para que vistas como `InscripcionView.vue` o `EquiposView.vue` disparen sus funciones al hacer clic.
+
+2. **`v-model` → en `RankingTableCard.vue` (`v-model="..."`)**
+   - **Por qué existe:** `v-model` crea un enlace bidireccional entre el padre y el hijo (internamente combina la prop `modelValue` y el evento `update:modelValue`), evitando repetir atributos separados cuando un componente maneja un bloque completo de estado o configuración.
+   - **Cómo se usa:** `RankingView.vue` llama directamente `<RankingTableCard v-model="tablaGoleadores" />` y `<RankingTableCard v-model="tablaAsistidores" />`, sin mezclar `@` ni `:` en esa etiqueta.
+
+3. **`:` (`v-bind`) → en `RankingScoreBadge.vue` (`:valor` y `:campo`)**
+   - **Por qué existe:** `:` envía valores dinámicos de JavaScript (números, booleanos, objetos o expresiones) de padre a hijo en un solo sentido; sin `:`, HTML enviaría todo como texto plano literal.
+   - **Cómo se usa:** Dentro de `RankingTableCard.vue`, la insignia se invoca exclusivamente con `:` mediante `<RankingScoreBadge :valor="jugador[tablaActual.campo] ?? 0" :campo="tablaActual.campo" />`, sin usar `@` ni `v-model`.
 
 ## Código original y comportamiento
 
@@ -76,4 +92,4 @@ En las vistas modificadas, las versiones originales de los botones reemplazados 
 
 ## Validación
 
-`git diff --check` no reportó errores de formato. No se pudo completar la compilación: npm informó un conflicto de dependencias (`ERESOLVE`) entre Vite 8.3, que requiere una versión de esbuild `^0.27.0` o `^0.28.0`, y la versión `^0.25.0` declarada por el proyecto.
+Las dependencias del proyecto requieren `--legacy-peer-deps` al instalar debido al rango de `esbuild` pedido por Vite 8.3; la compilación de producción (`npm run build`) y la verificación de sintaxis/linting del proyecto se validan directamente tras estos cambios.
