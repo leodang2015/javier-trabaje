@@ -54,8 +54,9 @@ Todos los componentes siguen el mismo patrón de comunicación con el archivo qu
 
 #### Cómo funciona por dentro
 - **Envoltura transparente sobre Quasar (`<q-btn>`):**
-  - `defineOptions({ inheritAttrs: false })` evita que Vue pegue los atributos extra al elemento incorrecto y permite pasarlos manualmente con `v-bind="$attrs"` directo al `<q-btn>` (líneas 2–3 y 18).
-  - Gracias a eso, cualquier vista puede pasarle `flat`, `outline`, `unelevated`, `dense`, `no-caps`, `to`, `type="submit"`, `:loading`, `:icon`, `:icon-right`, `@click` o incluso un `<q-tooltip>` dentro de `<slot />` (línea 13).
+  - `defineOptions({ inheritAttrs: false })` evita que Vue pegue los atributos extra al elemento incorrecto y permite pasarlos manualmente con `v-bind="$attrs"` directo al `<q-btn>` (líneas 2–3 y 17).
+  - Declara explícitamente `const emit = defineEmits(['click'])` y reenvía `@click="emit('click', $event)"` desde el `<q-btn>` hacia la vista padre.
+  - Gracias a `$attrs` + `emit('click')`, cualquier vista puede pasarle `flat`, `outline`, `unelevated`, `dense`, `no-caps`, `to`, `type="submit"`, `:loading`, `:icon`, `:icon-right`, `@click` o incluso un `<q-tooltip>` dentro de `<slot />` (línea 14).
 - **Paleta semántica (`tone` → `color`):**
   - El objeto `colorByTone` (líneas 47–53) traduce nombres simples a colores de Quasar:
     - `primary` → `'primary'`
@@ -235,3 +236,67 @@ Cuando el usuario termina de registrar un club en `InscripcionView.vue` y hace c
 
 - **`FixtureView.vue`** y **`EntrenadorView.vue`** no importan ningún componente de `frontend/src/components/`: sus botones y diálogos propios (como la carga de marcador oficial, tarjetas, cambios o pizarra táctica) viven directamente dentro de cada vista.
 - Sin embargo, si el Organizador abre **Programar Partido** o **Registrar Club** desde la barra de navegación global mientras está en cualquier ruta, quien se abre es `PartidoDialog.vue` o `EquipoDialog.vue` montado en `App.vue`.
+
+---
+
+## 5. Por Qué Existen `@` (`@click`), `:` (`v-bind`) y `v-model` en Componentes y Vistas
+
+En Vue 3, estos tres símbolos cumplen papeles distintos para comunicar una vista (padre) con un componente (hijo) o con elementos de Quasar/HTML:
+
+### 1. `@` (`v-on:`) — Escuchar Eventos ("Hijo → Padre" o "Usuario → Función")
+El símbolo **`@`** sirve para **reaccionar a acciones que ocurren** (un clic, enviar un formulario, cambiar una selección).
+
+- **`@click="funcion()"`**: ejecuta una función cuando el usuario hace clic.
+  - Ejemplos en vistas llamando a componentes:
+    - En `EquiposView.vue`: `<AppActionButton ... @click="abrirDialogoCambioDorsal(miFichaJugador)" />`
+    - En `InscripcionView.vue`: `<AppActionButton ... @click="abrirRegistroJugador(...)" />`
+    - Dentro de `AppActionButton.vue`: `<q-btn ... @click="emit('click', $event)" />` con `defineEmits(['click'])` para avisarle a la vista que se presionó el botón.
+- **Otros eventos con `@` usados en el proyecto:**
+  - `@update:model-value="..."`: avisa cuando cambia el valor de un diálogo, `q-select`, `q-input` o `q-toggle` (por ejemplo, en `PartidoDialog.vue`, `EquipoDialog.vue` y `JugadorDialog.vue`: `@update:model-value="$emit('update:modelValue', $event)"` para cerrar el modal cuando el usuario pulsa Esc, fuera del diálogo o *Cancelar*).
+  - `@submit.prevent="..."`: intercepta el envío de un formulario (`<q-form>`) sin recargar la página (por ejemplo en `InscripcionView.vue` y `App.vue`).
+  - `@click.stop="..."`: ejecuta el clic sin propagarlo a la tarjeta o fila contenedora (por ejemplo en `EntrenadorView.vue` línea 608).
+  - `@change="..."`: detecta cuando el usuario elige un archivo de imagen para el escudo (`App.vue` línea 374).
+
+### 2. `:` (`v-bind:`) — Enviar Datos Dinámicos ("Padre → Hijo")
+El símbolo **`:`** (abreviatura de `v-bind:`) sirve para **pasar valores, variables, objetos, iconos o estilos JavaScript hacia adentro** de un componente o etiqueta HTML (si no lleva `:`, Vue lo interpreta como texto plano).
+
+> **Aclaración importante (`@click` vs `:click`):**
+> En Vue para escuchar un clic **siempre se usa `@click`** (evento con arroba), **no `:click`**, porque `:` pasa datos *hacia abajo* y `@` escucha acciones *hacia arriba*. Si ves `:icon`, `:tabla`, `:valor`, `:loading` o `:disable`, todos esos llevan `:` porque le pasan datos o estados al componente.
+
+- Ejemplos reales en el proyecto con `:`:
+  - `:tabla="tabla"` en `RankingView.vue` → le entrega a `RankingTableCard.vue` el objeto con título, ícono y lista de jugadores.
+  - `:valor="jugador[tabla.campo] ?? 0"` y `:campo="tabla.campo"` en `RankingTableCard.vue` → le pasan el número y tipo (`'goles'` o `'asistencias'`) a `RankingScoreBadge.vue`.
+  - `:equipo-preseleccionado="clubRecienInscritoId"` en `InscripcionView.vue` → le manda a `JugadorDialog.vue` el ID del club recién creado.
+  - `:icon="matSwapHoriz"`, `:icon-right="matArrowForward"`, `:loading="guardando"`, `:disable="!puedeGuardar"`, `:model-value="modelValue"`, `:style="{ ... }"`, `:class="{ ... }"` → pasan iconos importados, booleanos y estilos dinámicos.
+
+### 3. `v-model` — Enlace Bidireccional (`:` + `@` Juntos)
+`v-model` **combina `:` y `@` en una sola directiva** para que el padre y el hijo compartan y actualicen la misma variable automáticamente:
+
+```vue
+<!-- Escribir esto: -->
+<EquipoDialog v-model="modalEquipo" />
+
+<!-- Equivale exactamente a escribir esto: -->
+<EquipoDialog
+  :model-value="modalEquipo"
+  @update:model-value="modalEquipo = $event"
+/>
+```
+
+- **Por qué existe en los modales (`*Dialog.vue`):**
+  - La vista (`App.vue`, `EquiposView.vue`, `InscripcionView.vue`) abre el modal poniendo `modalEquipo = true` (entra por `:model-value`).
+  - Cuando terminas de guardar o cierras con `v-close-popup`, el modal ejecuta `emit('update:modelValue', false)` (sale por `@update:model-value`) y la variable de la vista vuelve a `false` automáticamente.
+- **Por qué existe en inputs y selects:**
+  - `v-model="form.nombre"`, `v-model="form.equipo"` y `v-model.number="form.dorsal"` mantienen sincronizado lo que escribe o selecciona el usuario con la variable reactiva en JavaScript (`v-model.number` además convierte el texto a número automáticamente).
+
+### Resumen por Componente (`frontend/src/components/`)
+
+| Componente | Qué recibe con `:` (Props) | Qué emite / escucha con `@` | Usa `v-model` |
+| --- | --- | --- | --- |
+| `AppActionButton.vue` | `tone`, `color`, `fontFamily`, `fontWeight`, `letterSpacing`, `borderRadius`, `:icon`, `:icon-right`, `:loading`, `:disable` | `defineEmits(['click'])` + `@click` | No necesita (es un botón de acción) |
+| `RankingTableCard.vue` | `:tabla` (datos e info de cabecera) y pasa `:valor`, `:campo` | No necesita (tabla informativa de solo lectura) | No necesita |
+| `RankingScoreBadge.vue` | `:valor`, `:campo` | No necesita (etiqueta visual) | No necesita |
+| `PartidoDialog.vue` | `:model-value` (estado abierto/cerrado) | `@update:model-value`, `@click` | Sí (`v-model="store.dialogoPartido"` desde `App.vue` + campos internos) |
+| `EquipoDialog.vue` | `:model-value` (estado abierto/cerrado) | `@update:model-value`, `@click` | Sí (`v-model` desde `App.vue` y `EquiposView.vue` + campos internos) |
+| `JugadorDialog.vue` | `:model-value`, `:equipo-preseleccionado` | `@update:model-value`, `@click` | Sí (`v-model="mostrarDialogoJugador"` desde `InscripcionView.vue` + campos internos) |
+

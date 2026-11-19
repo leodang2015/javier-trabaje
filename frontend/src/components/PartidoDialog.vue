@@ -379,7 +379,7 @@
 import { ref, computed } from 'vue'
 import { useTorneo } from '../store/torneo.js'
 import { useQuasar } from 'quasar'
-import { matSportsScore, matClose, matRemove, matAdd, matCheck } from '@quasar/extras/material-icons'
+import { matSportsScore, matClose, matRemove, matAdd, matCheck, matAutoAwesome } from '@quasar/extras/material-icons'
 
 const props = defineProps({ modelValue: Boolean })
 const emit = defineEmits(['update:modelValue'])

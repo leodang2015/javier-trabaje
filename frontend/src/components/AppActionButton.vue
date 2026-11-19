@@ -9,6 +9,7 @@
       '--app-action-letter-spacing': props.letterSpacing,
       '--app-action-border-radius': props.borderRadius
     }"
+    @click="emit('click', $event)"
   >
     <slot />
   </q-btn>
@@ -16,6 +17,8 @@
 
 <script setup>
 defineOptions({ inheritAttrs: false })
+
+const emit = defineEmits(['click'])
 
 const props = defineProps({
   tone: {
