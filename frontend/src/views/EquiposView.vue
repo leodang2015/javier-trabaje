@@ -206,6 +206,27 @@
               </div>
             </div>
 
+            <!-- BANNER RÁPIDO SI EL JUGADOR ESTÁ VIENDO OTRO CLUB -->
+            <div
+              v-if="store.esJugador && !esMiClub && miFichaJugador"
+              class="q-pa-sm bg-indigo-50 border-b border-indigo-2 row items-center justify-between q-gutter-xs"
+            >
+              <div class="text-caption text-indigo-9 text-weight-medium">
+                👕 Estás viendo otro club. Tu dorsal actual es <strong>#{{ miFichaJugador.numero ?? miFichaJugador.dorsal ?? '—' }}</strong>.
+              </div>
+              <AppActionButton
+                unelevated
+                dense
+                tone="indigo"
+                text-color="white"
+                no-caps
+                size="sm"
+                :icon="matNumbers"
+                label="Elegir / Cambiar Mi Dorsal"
+                @click="abrirDialogoCambioDorsal(miFichaJugador)"
+              />
+            </div>
+
             <!-- TARJETA DESTACADA PARA EL JUGADOR: TU FICHA Y SELECCIÓN DE DORSAL -->
             <div
               v-if="store.esJugador && esMiClub && miFichaJugador"
@@ -836,6 +857,9 @@ const dorsalesDisponiblesSugeridos = computed(() => {
 })
 
 function abrirDialogoCambioDorsal(j) {
+  if (store.esJugador && store.miEquipoId && !esMiClub.value) {
+    seleccionId.value = String(store.miEquipoId).trim()
+  }
   jugadorEditandoDorsal.value = j || miFichaJugador.value
   inputDorsal.value = Number(jugadorEditandoDorsal.value?.numero ?? jugadorEditandoDorsal.value?.dorsal ?? '') || null
   errorDorsalRepetido.value = ''
@@ -886,11 +910,12 @@ async function ejecutarCambioDorsal() {
     })
     mostrarModalDorsal.value = false
   } catch (err) {
-    errorDorsalRepetido.value = err.message || 'No se pudo actualizar el dorsal'
+    const errMsg = err.response?.data?.msg || err.message || 'No se pudo actualizar el dorsal'
+    errorDorsalRepetido.value = errMsg
     $q.notify({
       type: 'negative',
       icon: 'error',
-      message: err.message || 'Error al actualizar el dorsal',
+      message: errMsg,
       position: 'top',
       timeout: 4000
     })

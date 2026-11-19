@@ -16,9 +16,14 @@ export const miJugador = computed(() => {
     const eqMatch = !mEq || idDe(j.equipo) === mEq
     if (!eqMatch) return false
     const jNom = String(j.nombre || '').toLowerCase().trim()
+    const jApe = String(j.apellido && j.apellido !== '-' ? j.apellido : '').toLowerCase().trim()
+    const jFull = [jNom, jApe].filter(Boolean).join(' ').trim()
     const jUsr = String(j.usuarioAsociado || '').toLowerCase().trim()
-    const jEmail = String(j.email || '').toLowerCase().trim()
-    return (uNom && jNom === uNom) || (uUsr && (jUsr === uUsr || jEmail.startsWith(uUsr)))
+    const jEmailPrefix = String(j.email || '').toLowerCase().trim().split('@')[0]
+    return (
+      (uUsr && (jUsr === uUsr || jEmailPrefix === uUsr)) ||
+      (uNom && (jNom === uNom || jFull === uNom))
+    )
   }) || null
 })
 
@@ -84,9 +89,12 @@ export function equipoHabilitadoParaJugar(equipoId) {
 export function normalizarJugador(j) {
   if (!j) return j
   const eqId = idDe(j.equipoId) || idDe(j.equipo)
+  const num = j.numero ?? j.dorsal
   return {
     ...j,
     id: j._id || j.id,
+    numero: num,
+    dorsal: j.dorsal ?? num,
     equipoId: eqId,
     equipo: eqId
   }
@@ -138,10 +146,19 @@ export async function actualizarJugador(jugadorId, datos) {
   return res.data
 }
 
-export async function cambiarDorsalJugador({ jugadorId, numero }) {
+export async function cambiarDorsalJugador(param1, param2) {
+  let jugadorId, numero
+  if (typeof param1 === 'object' && param1 !== null) {
+    jugadorId = param1.jugadorId || param1.id
+    numero = param1.numero ?? param1.dorsal
+  } else {
+    jugadorId = param1
+    numero = param2
+  }
+  const jId = idDe(jugadorId)
   const res = await axios.patch(
-    `${API_URL}/jugadores/${jugadorId}/dorsal`,
-    { numero },
+    `${API_URL}/jugadores/${jId}/dorsal`,
+    { numero: Number(numero) },
     { headers: authHeaders() }
   )
   await cargarJugadores()

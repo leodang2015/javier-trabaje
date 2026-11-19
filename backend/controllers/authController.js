@@ -193,11 +193,42 @@ export const registro = async (req, res) => {
       const emailFicha = `${usernameClean}@futbolito.local`
       const fichaExistente = await Jugador.findOne({ email: emailFicha })
       if (!fichaExistente) {
-        const countJugadores = await Jugador.countDocuments({ equipo: equipoExistente._id })
+        const jugadoresClub = await Jugador.find({
+          equipo: equipoExistente._id,
+          estadoAprobacion: { $ne: 'Rechazado' }
+        })
+        const dorsalSolicitadoRaw = req.body.dorsal ?? req.body.numero
+        let dorsalFinal = null
+
+        if (dorsalSolicitadoRaw !== undefined && dorsalSolicitadoRaw !== null && dorsalSolicitadoRaw !== '') {
+          const dorsalNum = Number(dorsalSolicitadoRaw)
+          if (!Number.isInteger(dorsalNum) || dorsalNum < 1 || dorsalNum > 99) {
+            return res.status(400).json({
+              msg: 'El número de dorsal debe ser un entero entre 1 y 99.'
+            })
+          }
+          const ocupado = jugadoresClub.find(j => Number(j.numero) === dorsalNum)
+          if (ocupado) {
+            return res.status(400).json({
+              msg: `El dorsal #${dorsalNum} ya está ocupado por ${ocupado.nombre} en ${equipoExistente.nombre}. Elige otro número disponible.`
+            })
+          }
+          dorsalFinal = dorsalNum
+        } else {
+          const usados = new Set(jugadoresClub.map(j => Number(j.numero)).filter(Boolean))
+          for (let n = 1; n <= 99; n++) {
+            if (!usados.has(n)) {
+              dorsalFinal = n
+              break
+            }
+          }
+          if (!dorsalFinal) dorsalFinal = jugadoresClub.length + 1
+        }
+
         await Jugador.create({
           nombre: (nombre || usernameClean).trim(),
           apellido: '-',
-          numero: countJugadores + 1,
+          numero: dorsalFinal,
           posicion: 'En Banca',
           equipo: equipoExistente._id,
           email: emailFicha,

@@ -454,6 +454,50 @@
                   </template>
                 </q-select>
 
+                <!-- 2. Selección de Dorsal (Número de Camiseta 1-99) -->
+                <div class="bg-white border border-indigo-2 rounded-borders q-pa-sm q-gutter-y-xs">
+                  <div class="row items-center justify-between">
+                    <span class="text-caption text-weight-bolder text-indigo-9">
+                      👕 2. Escoger Tu Dorsal / Camiseta (1-99)
+                    </span>
+                    <span v-if="registroForm.dorsal && !dorsalRegistroOcupadoPor && registroForm.dorsal >= 1 && registroForm.dorsal <= 99" class="text-caption text-positive text-weight-bold font-11">
+                      ✅ #{{ registroForm.dorsal }} Libre
+                    </span>
+                  </div>
+                  <q-input
+                    v-model.number="registroForm.dorsal"
+                    type="number"
+                    min="1"
+                    max="99"
+                    outlined
+                    dense
+                    bg-color="white"
+                    placeholder="Ej: 7, 10, 23... (opcional: si lo dejas vacío se asigna uno libre)"
+                    :error="Boolean(dorsalRegistroError)"
+                    :error-message="dorsalRegistroError"
+                  >
+                    <template #prepend>
+                      <q-icon :name="matNumbers" color="indigo-7" />
+                    </template>
+                  </q-input>
+                  <div v-if="registroForm.equipo && dorsalesLibresClubRegistro.length" class="row items-center q-gutter-xs">
+                    <span class="text-caption text-grey-7 font-10">Libres:</span>
+                    <q-btn
+                      v-for="num in dorsalesLibresClubRegistro"
+                      :key="num"
+                      dense
+                      unelevated
+                      no-caps
+                      size="xs"
+                      :color="Number(registroForm.dorsal) === num ? 'indigo-7' : 'grey-3'"
+                      :text-color="Number(registroForm.dorsal) === num ? 'white' : 'dark'"
+                      :label="`#${num}`"
+                      class="font-mono text-weight-bold q-px-xs"
+                      @click="registroForm.dorsal = num"
+                    />
+                  </div>
+                </div>
+
                 <!-- Posición Reglamentaria Inicial: En Banca (El Entrenador decide la posición) -->
                 <div class="bg-indigo-50 border border-indigo-2 rounded-borders q-pa-sm">
                   <div class="row items-center justify-between q-mb-xs">
@@ -1199,7 +1243,8 @@ import {
   matManageAccounts,
   matSettings,
   matVpnKey,
-  matEventSeat
+  matEventSeat,
+  matNumbers
 } from '@quasar/extras/material-icons'
 
 const $q = useQuasar()
@@ -1251,6 +1296,7 @@ const registroForm = ref({
   nombreEquipo: '',
   barriada: '',
   posicion: 'En Banca',
+  dorsal: null,
   escudocolor: '#059669',
   escudoFigura: '🛡️',
   escudoUrl: ''
@@ -1312,6 +1358,46 @@ const opcionesEquipos = computed(() =>
   }))
 )
 
+const jugadoresClubRegistro = computed(() => {
+  if (!registroForm.value.equipo) return []
+  const target = String(registroForm.value.equipo).trim()
+  return (store.jugadores || []).filter(j => {
+    const eqId = String(j.equipoId || (j.equipo && typeof j.equipo === 'object' ? (j.equipo._id || j.equipo.id) : j.equipo) || '').trim()
+    return eqId === target && j.estadoAprobacion !== 'Rechazado'
+  })
+})
+
+const dorsalRegistroOcupadoPor = computed(() => {
+  const num = Number(registroForm.value.dorsal)
+  if (!num || isNaN(num)) return null
+  return jugadoresClubRegistro.value.find(j => Number(j.numero ?? j.dorsal) === num) || null
+})
+
+const dorsalRegistroError = computed(() => {
+  const val = registroForm.value.dorsal
+  if (val === null || val === undefined || val === '') return ''
+  const num = Number(val)
+  if (!Number.isInteger(num) || num < 1 || num > 99) {
+    return 'El dorsal debe ser un número entero entre 1 y 99.'
+  }
+  if (dorsalRegistroOcupadoPor.value) {
+    return `El dorsal #${num} ya está ocupado por ${dorsalRegistroOcupadoPor.value.nombre} en ese club.`
+  }
+  return ''
+})
+
+const dorsalesLibresClubRegistro = computed(() => {
+  const usados = new Set(jugadoresClubRegistro.value.map(j => Number(j.numero ?? j.dorsal)).filter(Boolean))
+  const libres = []
+  for (let n = 1; n <= 99; n++) {
+    if (!usados.has(n)) {
+      libres.push(n)
+      if (libres.length >= 10) break
+    }
+  }
+  return libres
+})
+
 function seleccionarRolRegistro(nuevoRol) {
   registroForm.value.rol = nuevoRol
   if (nuevoRol === 'organizador') registroForm.value.codigo = ''
@@ -1367,7 +1453,11 @@ async function ejecutarRegistro() {
       errorAcceso.value = 'Como jugador debes escoger obligatoriamente un equipo existente en la plataforma.'
       return
     }
-registroForm.value.posicion = 'En Banca'
+    if (dorsalRegistroError.value) {
+      errorAcceso.value = dorsalRegistroError.value
+      return
+    }
+    registroForm.value.posicion = 'En Banca'
   }
 
   try {
@@ -1381,6 +1471,7 @@ registroForm.value.posicion = 'En Banca'
       nombreEquipo: registroForm.value.nombreEquipo,
       barriada: registroForm.value.barriada,
       posicion: registroForm.value.posicion,
+      dorsal: registroForm.value.dorsal ? Number(registroForm.value.dorsal) : undefined,
       escudocolor: registroForm.value.escudocolor,
       escudoFigura: registroForm.value.escudoFigura,
       escudoUrl: registroForm.value.escudoUrl
@@ -1424,7 +1515,7 @@ registroForm.value.posicion = 'En Banca'
       timeout: 3500
     })
   } catch (err) {
-    errorAcceso.value = err.message || 'Error al registrar la cuenta'
+    errorAcceso.value = err.response?.data?.msg || err.message || 'Error al registrar la cuenta'
   }
 }
 

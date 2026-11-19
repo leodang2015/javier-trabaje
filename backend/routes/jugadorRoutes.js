@@ -311,10 +311,11 @@ router.patch('/:id/dorsal', async (req, res) => {
     const jug = await JugadorModel.findById(id);
     if (!jug) return res.status(404).json({ msg: 'Jugador no encontrado' });
 
-    // Validar dorsal repetido en el mismo club
+    // Validar dorsal repetido en el mismo club (ignorando fichas rechazadas)
     const ocupado = await JugadorModel.findOne({
       equipo: jug.equipo,
       numero: num,
+      estadoAprobacion: { $ne: 'Rechazado' },
       _id: { $ne: jug._id }
     });
     if (ocupado) {
@@ -326,7 +327,8 @@ router.patch('/:id/dorsal', async (req, res) => {
     jug.numero = num;
     jug.dorsal = num;
     await jug.save();
-    res.json({ msg: `Dorsal #${num} asignado a ${jug.nombre}`, jugador: jug });
+    const actualizado = await JugadorModel.findById(jug._id).populate('equipo');
+    res.json({ msg: `Dorsal #${num} asignado a ${jug.nombre}`, jugador: actualizado || jug });
   } catch (err) {
     res.status(400).json({ msg: err.message || 'Error al actualizar dorsal' });
   }
