@@ -48,7 +48,7 @@ Este documento está estructurado para responder de forma precisa, profesional y
    - Si un DT intenta asignar a otro jugador como 'Arquero', el sistema bloquea la acción con una alerta clara y exige enviar al titular a la banca antes de ascender a otro al arco (doble validación frontend/backend).
 
 5. **Dorsal Único por Club (1 al 99):**
-   - Dos jugadores del mismo equipo no pueden usar el mismo número de camiseta. El backend (`jugadorController.js`) rechaza duplicados indicando el nombre del futbolista que ya porta ese número.
+   - El futbolista puede elegir su dorsal desde el registro inicial (`authController.js`) y modificarlo luego desde la vista de Clubes (`PATCH /api/jugadores/:id/dorsal`). Dos jugadores activos del mismo equipo no pueden usar el mismo número de camiseta (se excluyen fichas rechazadas y se indica quién ocupa el número).
 
 6. **Capitán Obligatorio para Disputar Partidos:**
    - Por reglamento, un club debe contar con un Capitán (Ⓒ) oficialmente designado por su DT para ser considerado habilitado para jugar.
@@ -86,41 +86,46 @@ Este documento está estructurado para responder de forma precisa, profesional y
 ### 2. Estructura de Carpetas del Proyecto:
 
 ```text
-├── server.ts                  # Servidor unificado full-stack (Express + Vite middlewares en puerto 3000)
-├── package.json               # Dependencias del proyecto y scripts de ejecución
-├── .gitignore                 # Exclusión de credenciales (.env), dependencias y metadatos
-├── .env.example               # Plantilla de variables de entorno segura para Git
+├── server.ts                          # Servidor unificado full-stack (Express + Vite middlewares en puerto 3000)
+├── api/
+│   └── index.js                       # Punto de entrada serverless del backend Express para Vercel
+├── vercel.json                        # Configuración de build, outputDirectory (dist) y rewrites de API/SPA
+├── package.json                       # Dependencias del proyecto y scripts de ejecución
+├── .gitignore                         # Exclusión de credenciales (.env), dependencias y metadatos
+├── .env.example                       # Plantilla de variables de entorno segura para Git
+├── CAMBIOS_COMPONENTES_REUTILIZABLES.md # Documentación de componentes (@, v-model, :)
 │
-├── frontend/                  # CÓDIGO DEL CLIENTE (VUE 3 + QUASAR)
-│   ├── vite.config.js         # Configuración del bundler Vite y plugins Quasar
-│   ├── index.html             # Entry point HTML de la aplicación
+├── frontend/                          # CÓDIGO DEL CLIENTE (VUE 3 + QUASAR)
+│   ├── vite.config.js                 # Configuración del bundler Vite y plugins Quasar
+│   ├── index.html                     # Entry point HTML de la aplicación
 │   └── src/
-│       ├── main.js            # Inicialización de Vue, Pinia/Store y Quasar
-│       ├── App.vue            # Layout principal, barra de navegación, campana y Login/Registro
-│       ├── router/            # Definición de rutas del sistema
-│       ├── torneo.js          # Reexporta el store para mantener compatibilidad con imports anteriores
-│       ├── store/             # STORE MODULAR (1:1 con modelos de MongoDB)
-│       │   ├── api.js         # Configuración Axios y tokens JWT
-│       │   ├── modules/       # Módulos especializados
-│       │   │   ├── authStore.js     # Usuario.js (Sesión, roles, códigos y perfil)
-│       │   │   ├── equipoStore.js   # Equipo.js (Clubes, normalización y estados)
-│       │   │   ├── jugadorStore.js  # Jugador.js (Planteles, posiciones y traspasos)
-│       │   │   ├── partidoStore.js  # Partido.js (Fixture, goles y tabla)
-│       │   │   └── torneoStore.js   # Torneo.js y Notificaciones
-│       │   └── torneo.js      # Orquestador reactivo unificado (useTorneo)
-│       ├── components/        # Diálogos y componentes visuales reutilizables
-│       │   ├── AppActionButton.vue     # Botón compartido con estilos configurables
-│       │   ├── RankingTableCard.vue    # Tarjeta reutilizable de cada tabla de ranking
-│       │   ├── RankingScoreBadge.vue   # Indicador de goles o asistencias
+│       ├── main.js                    # Inicialización de Vue, Store y Quasar
+│       ├── App.vue                    # Layout principal, barra de navegación, campana y Login/Registro
+│       ├── router/                    # Definición de rutas del sistema
+│       ├── torneo.js                  # Reexporta el store para mantener compatibilidad con imports anteriores
+│       ├── store/                     # STORE MODULAR (1:1 con modelos de MongoDB)
+│       │   ├── api.js                 # Configuración Axios y tokens JWT
+│       │   ├── modules/               # Módulos especializados
+│       │   │   ├── authStore.js       # Usuario.js (Sesión, roles, códigos y perfil)
+│       │   │   ├── equipoStore.js     # Equipo.js (Clubes, normalización y estados)
+│       │   │   ├── jugadorStore.js    # Jugador.js (Planteles, posiciones, dorsales y traspasos)
+│       │   │   ├── partidoStore.js    # Partido.js (Fixture, goles y tabla)
+│       │   │   └── torneoStore.js     # Torneo.js y Notificaciones
+│       │   └── torneo.js              # Orquestador reactivo unificado (useTorneo)
+│       ├── components/                # Diálogos y componentes visuales reutilizables
+│       │   ├── AppActionButton.vue     # Botón compartido (@click y estilos configurables)
+│       │   ├── RankingTableCard.vue    # Tarjeta reutilizable de ranking conectada con v-model
+│       │   ├── RankingScoreBadge.vue   # Insignia de goles/asistencias conectada con :
 │       │   ├── PartidoDialog.vue       # Modal de creación y configuración de partidos
 │       │   ├── EquipoDialog.vue        # Modal de creación de clubes
 │       │   └── JugadorDialog.vue       # Modal de registro e inscripción de futbolistas
-│       └── views/             # Vistas de página principales
-│           ├── PosicionesView.vue  # Tabla de posiciones con racha y métricas
-│           ├── FixtureView.vue     # Calendario de partidos y carga de actas (440px)
-│           ├── EquiposView.vue     # Directorio de clubes registrados (excluye cancelados)
-│           ├── RankingView.vue     # Tabla oficial de goleadores y asistentes
-│           └── EntrenadorView.vue  # Pizarra táctica interactiva y panel de aprobación de jugadores
+│       └── views/                     # Vistas de página principales
+│           ├── PosicionesView.vue      # Tabla de posiciones con racha y métricas
+│           ├── FixtureView.vue         # Calendario de partidos y carga de actas (440px)
+│           ├── EquiposView.vue         # Directorio de clubes y cambio de dorsal/traspaso
+│           ├── RankingView.vue         # Tabla oficial de goleadores y asistentes
+│           ├── InscripcionView.vue     # Formulario de inscripción de nuevos clubes
+│           └── EntrenadorView.vue      # Pizarra táctica interactiva y panel de aprobación de jugadores
 │
 └── backend/                   # CÓDIGO DEL SERVIDOR (EXPRESS + MONGOOSE)
     ├── index.js               # Enrutador maestro y conexión a MongoDB Atlas
@@ -140,9 +145,9 @@ Hay dos archivos llamados `torneo.js`, pero no mantienen estados separados: `fro
 
 ### Componentes compartidos de interfaz
 
-`AppActionButton.vue` reutiliza el botón de Quasar en las vistas de inscripción, posiciones y equipos. Centraliza colores, tipografía y redondeo, mientras cada vista conserva sus propias rutas, condiciones por rol y eventos. Las vistas que no usan este componente mantienen sus botones actuales.
+`AppActionButton.vue` reutiliza el botón de Quasar en las vistas de inscripción, posiciones y equipos usando `@click` para emitir las interacciones. Centraliza colores, tipografía y redondeo sin alterar en pantalla las acciones, rutas ni permisos por rol.
 
-En Ranking, `RankingView.vue` conserva los cálculos de goleadores y asistidores y delega la presentación en `RankingTableCard.vue`; cada cifra se representa con `RankingScoreBadge.vue`. Esta separación permite ajustar la presentación sin duplicar la estructura de la tabla.
+En Ranking, `RankingView.vue` conserva los cálculos de goleadores y asistidores y delega la presentación en `RankingTableCard.vue` mediante `v-model`; cada cifra se representa con `RankingScoreBadge.vue` conectado con `:` (`:valor` y `:campo`) para distinguir visualmente goles (`⚽` naranja) y asistencias (`🎯` azul) sin duplicar la estructura de la tabla.
 
 **¿Por qué se organizó así?**
 > *"Adoptamos una arquitectura desacoplada por responsabilidades (**Separation of Concerns**). En el backend, `controllers` concentra estrictamente las reglas del negocio futbolístico, `routes` expone los endpoints limpios y `models` garantiza la integridad de datos en MongoDB Atlas. En el frontend, separamos las `views` de los `components`, y modularizamos el `store` en submódulos que reflejan directamente cada entidad de la base de datos, canalizados a través de `torneo.js` para asegurar coherencia en tiempo real en toda la interfaz."*

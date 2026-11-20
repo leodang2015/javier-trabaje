@@ -86,10 +86,18 @@ En Vue cada símbolo cumple un propósito distinto en la comunicación entre vis
    - **Por qué existe:** `:` envía valores dinámicos de JavaScript (números, booleanos, objetos o expresiones) de padre a hijo en un solo sentido; sin `:`, HTML enviaría todo como texto plano literal.
    - **Cómo se usa:** Dentro de `RankingTableCard.vue`, la insignia se invoca exclusivamente con `:` mediante `<RankingScoreBadge :valor="jugador[tablaActual.campo] ?? 0" :campo="tablaActual.campo" />`, sin usar `@` ni `v-model`.
 
+## Qué cambian en la página
+
+En lo que ve y hace el usuario, **no se pierden ni modifican acciones, rutas ni permisos**; lo que cambia es la centralización visual y estructural:
+
+- **`AppActionButton.vue` (en Inscripción, Posiciones y Equipos):** aplica un estilo base uniforme (`border-radius: 8px`, `font-weight: 700`, `letter-spacing: 0.01em` y paleta `tone`) a los botones reemplazados. Si se ajusta este archivo, todos esos botones se actualizan simultáneamente en las 3 pantallas.
+- **`RankingTableCard.vue` (en Ranking):** dibuja ambas tarjetas (*Tabla de Goleadores* y *Máximos Asistidores*) desde un único componente, manteniendo medallas de podio, dorsal, punto de color del club y estado vacío.
+- **`RankingScoreBadge.vue` (dentro de Ranking):** define la insignia de cierre de cada fila según `:campo` (naranja con `⚽` para goles; azul con `🎯` para asistencias).
+
 ## Código original y comportamiento
 
 En las vistas modificadas, las versiones originales de los botones reemplazados y del marcado del ranking se dejaron como comentarios, antes de la implementación nueva. Los comentarios no se muestran en la página. Las funciones, rutas y acciones originales de los botones se conservaron.
 
 ## Validación
 
-Las dependencias del proyecto requieren `--legacy-peer-deps` al instalar debido al rango de `esbuild` pedido por Vite 8.3; la compilación de producción (`npm run build`) y la verificación de sintaxis/linting del proyecto se validan directamente tras estos cambios.
+Las dependencias del proyecto requieren `--legacy-peer-deps` al instalar debido al rango de `esbuild` pedido por Vite 8.3; la compilación de producción (`vite build frontend --config frontend/vite.config.js`) y la verificación de sintaxis/linting se ejecutaron correctamente generando la carpeta `dist/`.

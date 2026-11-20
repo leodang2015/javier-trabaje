@@ -3,7 +3,7 @@
 
 En este torneo de fútbol barrial rige una **separación estricta de poderes y funciones** respaldada por control de acceso basado en roles (**Role-Based Access Control - RBAC**). Cada participante cuenta con facultades exclusivas, responsabilidades intransferibles y límites éticos claros para garantizar la imparcialidad deportiva y la integridad de la base de datos en MongoDB Atlas.
 
-> **Nota de interfaz:** los componentes visuales reutilizables, como `AppActionButton.vue`, centralizan la presentación de algunos botones, pero no conceden permisos ni modifican las reglas RBAC. Las condiciones de cada acción siguen dependiendo del rol y la lógica de la vista. Consulta [CAMBIOS_COMPONENTES_REUTILIZABLES.md](./CAMBIOS_COMPONENTES_REUTILIZABLES.md) para conocer su uso y personalización.
+> **Nota de interfaz:** los componentes visuales reutilizables (`AppActionButton.vue`, `RankingTableCard.vue` y `RankingScoreBadge.vue`) centralizan la presentación de botones, tarjetas e insignias del ranking, pero no conceden permisos ni modifican las reglas RBAC. Las condiciones de cada acción siguen dependiendo del rol y la lógica de cada vista. Consulta [CAMBIOS_COMPONENTES_REUTILIZABLES.md](./CAMBIOS_COMPONENTES_REUTILIZABLES.md) para conocer su funcionamiento con `@`, `v-model` y `:`.
 
 ---
 
@@ -79,7 +79,7 @@ El Futbolista es el protagonista del terreno de juego. Su perfil está enfocado 
 1. **Solicitud de Traspaso Federado (`🔄 Cambiar de Equipo`):**
    - Desde la pestaña **Clubes**, selecciona el nuevo equipo al que desea migrar y envía su petición formal, activando el circuito de doble aprobación entre directores técnicos.
 2. **Personalización de Ficha y Dorsal Oficial:**
-   - Solicita su número de camiseta predilecto (del 1 al 99), validando en tiempo real que no esté ocupado por otro compañero de su equipo.
+   - Escoge su número de camiseta predilecto (del 1 al 99) desde el formulario de registro inicial o lo actualiza posteriormente desde **Clubes** (`Elegir / Cambiar Mi Dorsal`), validando en tiempo real que no esté ocupado por otro compañero activo de su equipo.
 3. **Recepción de Alertas Oficiales y Convocatorias:**
    - Recibe notificaciones automáticas cuando es aprobado en el plantel, cuando su partido es postergado o cuando avanza su traspaso.
 4. **Consulta Personalizada:**

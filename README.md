@@ -26,7 +26,7 @@ Plataforma web full-stack moderna para la organización, administración, seguim
 ### 🏃 Rol Jugador (Futbolista)
 - **Proceso de Admisión con Espera**: Al registrarse, el futbolista selecciona su club e ingresa automáticamente como **`🪑 En Banca`** con estado **`Pendiente`**; no podrá operar en el sistema hasta que su DT lo autorice formalmente.
 - **Traspaso Federado (`🔄 Cambiar de Equipo`)**: Solicita formalmente su transferencia a otro club mediante doble aprobación deportiva (DT de origen + DT de destino).
-- **Dorsal Oficial Exclusivo**: Selección y personalización de su número de camiseta validando que no esté ocupado en su plantilla.
+- **Dorsal Oficial Exclusivo**: Selección del número de camiseta favorito (1 al 99) desde el registro inicial y personalización posterior desde la vista de Clubes, validando disponibilidad por equipo (excluyendo fichas rechazadas).
 - **Baja Individual**: Puede eliminar su cuenta personal retirando su ficha sin perjudicar al club ni a sus compañeros.
 - **Consulta Personalizada**: Visualización de calendario exclusivo de su equipo, estadísticas individuales y tabla general de goleo y asistencias.
 
@@ -64,10 +64,11 @@ También existe `frontend/src/torneo.js`, que funciona como una capa de compatib
 
 La carpeta `frontend/src/components/` contiene tanto diálogos como componentes visuales compartidos:
 
-- **`AppActionButton.vue`** envuelve el botón de Quasar y centraliza color, tipografía y bordes. Se utiliza en las vistas de inscripción, posiciones y equipos; las acciones y rutas siguen definidas por cada vista.
-- **`RankingTableCard.vue`** presenta una tabla de ranking y **`RankingScoreBadge.vue`** muestra los goles o las asistencias. `RankingView.vue` reutiliza la tarjeta para cada tabla.
+- **`AppActionButton.vue`** (`@` / `@click`): envuelve el botón de Quasar y centraliza color, tipografía y bordes, reenviando eventos de clic a las vistas de inscripción, posiciones y equipos.
+- **`RankingTableCard.vue`** (`v-model`): presenta cada tabla de ranking conectada bidireccionalmente desde `RankingView.vue`.
+- **`RankingScoreBadge.vue`** (`:`): muestra los goles (`⚽`) o asistencias (`🎯`) recibiendo sus datos mediante propiedades enlazadas (`:valor` y `:campo`).
 
-Los tonos, la familia y el peso tipográficos, el espaciado entre letras y el redondeo se pueden ajustar mediante las propiedades del botón compartido. Más detalles y ejemplos están en [CAMBIOS_COMPONENTES_REUTILIZABLES.md](./CAMBIOS_COMPONENTES_REUTILIZABLES.md).
+Los tonos, la familia y el peso tipográficos, el espaciado entre letras y el redondeo se pueden ajustar desde `AppActionButton.vue`. Más detalles sobre qué cambia en pantalla y por qué existen `@`, `v-model` y `:` están en [CAMBIOS_COMPONENTES_REUTILIZABLES.md](./CAMBIOS_COMPONENTES_REUTILIZABLES.md).
 
 ---
 
@@ -88,46 +89,52 @@ Los tonos, la familia y el peso tipográficos, el espaciado entre letras y el re
 ## 📦 Estructura del Proyecto
 
 ```text
-├── server.ts                  # Servidor Full-Stack (Express + Vite en puerto 3000)
-├── package.json               # Dependencias y scripts
-├── .env.example               # Plantilla de variables de entorno
-├── SUSTENTACION_PROYECTO.md   # Guía completa de defensa técnica del proyecto
-├── ROLES_Y_FUNCIONES.md       # Matriz oficial de funciones y permisos RBAC
+├── server.ts                          # Servidor Full-Stack local (Express + Vite en puerto 3000)
+├── api/
+│   └── index.js                       # Adaptador serverless del backend Express para Vercel
+├── vercel.json                        # Configuración de compilación, salida (dist) y rewrites en Vercel
+├── package.json                       # Dependencias y scripts
+├── .env.example                       # Plantilla de variables de entorno
+├── SUSTENTACION_PROYECTO.md           # Guía completa de defensa técnica del proyecto
+├── ROLES_Y_FUNCIONES.md               # Matriz oficial de funciones y permisos RBAC
+├── CAMBIOS_COMPONENTES_REUTILIZABLES.md # Documentación de componentes reutilizables (@, v-model, :)
 │
-├── frontend/                  # Aplicación SPA cliente (Vue 3 + Quasar)
+├── frontend/                          # Aplicación SPA cliente (Vue 3 + Quasar)
 │   ├── src/
-│   │   ├── App.vue            # Layout principal, barra de navegación, campana y Login/Registro
-│   │   ├── store/             # Store modular (auth, equipo, jugador, partido, torneo)
-│   │   ├── views/             # Vistas (Posiciones, Fixture, Equipos, Ranking, Entrenador)
-│   │   └── components/        # Diálogos y componentes visuales reutilizables
+│   │   ├── App.vue                    # Layout principal, barra de navegación, campana y Login/Registro
+│   │   ├── store/                     # Store modular (auth, equipo, jugador, partido, torneo)
+│   │   ├── views/                     # Vistas (Posiciones, Fixture, Equipos, Ranking, Entrenador, Inscripción)
+│   │   └── components/                # Diálogos y componentes visuales reutilizables
 │   │       ├── AppActionButton.vue
 │   │       ├── RankingTableCard.vue
 │   │       └── RankingScoreBadge.vue
 │
-└── backend/                   # API RESTful (Node.js + Express)
-    ├── controllers/           # Lógica del negocio y reglas reglamentarias
-    ├── models/                # Esquemas Mongoose (Torneo, Equipo, Jugador, Partido, etc.)
-    ├── routes/                # Endpoints de la API
-    └── middlewares/           # Validación de tokens JWT y roles
+└── backend/                           # API RESTful (Node.js + Express)
+    ├── controllers/                   # Lógica del negocio y reglas reglamentarias
+    ├── models/                        # Esquemas Mongoose (Torneo, Equipo, Jugador, Partido, etc.)
+    ├── routes/                        # Endpoints de la API
+    └── middlewares/                   # Validación de tokens JWT y roles
 ```
 
 ---
 
-## ⚡ Instalación y Ejecución
+## ⚡ Instalación, Ejecución y Despliegue
 
 ```bash
 # 1. Clonar el repositorio e ingresar a la carpeta del proyecto
 cd applet
 
-# 2. Instalar dependencias
-npm install
+# 2. Instalar dependencias (resuelve compatibilidad de peer deps entre Vite 8 y esbuild)
+npm install --legacy-peer-deps
 
-# 3. Configurar variables de entorno (MongoDB Atlas)
+# 3. Configurar variables de entorno (MongoDB Atlas, JWT y Gemini API)
 cp .env.example .env
 
 # 4. Iniciar servidor unificado (Frontend y Backend en el puerto 3000)
 npm run dev
 
-# 5. Compilar para producción
+# 5. Compilar para producción (genera carpeta dist/)
 npm run build
 ```
+
+> **Despliegue en Vercel:** El proyecto está configurado en `vercel.json` desde la raíz (sin `Root Directory` apuntando a subcarpetas) para compilar el frontend en `dist/` y enrutar `/api/(.*)` hacia `api/index.js`.
