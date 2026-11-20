@@ -251,8 +251,6 @@ import {
   matSports,
   matSportsSoccer,
   matSportsScore,
-  matGroupAdd,
-  matAdd,
   matMilitaryTech,
   matShield,
   matSpeed,
@@ -270,8 +268,6 @@ const roleBadgeClass = computed(() => {
   return 'bg-slate-700 text-white font-bold border border-slate-600'
 })
 const buscar = ref('')
-const filtroVistaTabla = ref('todos')
-const filtroVistaPartidos = ref('todos')
 
 const finalizado = (p) => ['jugado', 'finalizado'].includes(String(p?.estado || '').toLowerCase())
 
