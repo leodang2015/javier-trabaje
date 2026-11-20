@@ -47,15 +47,15 @@ El componente compartido solo afecta a los botones que se reemplazaron por `AppA
 
 Aquí están las ubicaciones concretas dentro del proyecto. Los números indican las líneas actuales y pueden cambiar si luego se edita el código.
 
-| Archivo | Dónde encontrar el cambio |
-| --- | --- |
-| `frontend/src/components/AppActionButton.vue` | Envoltura de Quasar y estilos del botón: líneas 1–70; emisión `@click`: líneas 12 y 21; props: líneas 23–48; mapa de colores: líneas 50–56. |
-| `frontend/src/views/InscripcionView.vue` | Botones reutilizables en el bloque de éxito: líneas 37–60; botón de confirmar inscripción: líneas 171–184; importación del componente: línea 225. |
-| `frontend/src/views/PosicionesView.vue` | Botones de acceso rápido a Fixture, Tabla y Ranking: líneas 368, 428 y 467; importación: línea 505. |
-| `frontend/src/views/EquiposView.vue` | Botones de dorsal y traspaso: líneas 217–227 y 263–284; importación: línea 658. |
-| `frontend/src/views/RankingView.vue` | Uso de `RankingTableCard` con `v-model`: líneas 86–87; importación: línea 96; objetos `tablaGoleadores` y `tablaAsistidores`: líneas 118–144; marcado original comentado: líneas 2–83. |
-| `frontend/src/components/RankingTableCard.vue` | Estructura de tarjeta y tabla: líneas 1–83; soporte `v-model` (`modelValue` y `update:modelValue`): líneas 90–112; estilos de tabla: líneas 125–197; incluye `RankingScoreBadge` con `:` en la línea 65. |
-| `frontend/src/components/RankingScoreBadge.vue` | Presentación del valor de goles/asistencias recibido mediante `:`: líneas 1–28. |
+| Archivo | Dónde encontrar el cambio (líneas) | Qué cambio le hizo a la página |
+| --- | --- | --- |
+| `frontend/src/components/AppActionButton.vue` | Envoltura de Quasar y estilos del botón: líneas 1–70; emisión `@click`: líneas 12 y 21; props: líneas 23–48; mapa de colores: líneas 50–56. | Centraliza el aspecto de los botones reemplazados (`border-radius: 8px`, peso de fuente `700`, espaciado `0.01em` y paleta `tone`) y permite cambiarles el estilo a todos desde un solo archivo. |
+| `frontend/src/views/InscripcionView.vue` | Botones reutilizables en el bloque de éxito: líneas 37–60; botón de confirmar inscripción: líneas 171–184; importación del componente: línea 225. | Unifica el estilo del botón *"Confirmar Inscripción del Club"* y de los 3 botones al completar el registro (*"Registrar Jugadores a este Club"*, *"Ir a Pizarra Táctica (DT)"* e *"Inscribir Otro Equipo"*), manteniendo sus acciones y rutas intactas. |
+| `frontend/src/views/PosicionesView.vue` | Botones de acceso rápido a Fixture, Tabla y Ranking: líneas 368, 428 y 467; importación: línea 505. | Aplica el formato unificado de `AppActionButton` a los enlaces *"Ver Fixture"*, *"Ver Tabla"* y *"Ver Ranking"* sin alterar su navegación. |
+| `frontend/src/views/EquiposView.vue` | Botones de dorsal y traspaso: líneas 217–227 y 263–284; importación: línea 658. | Estandariza los botones del futbolista (*"Elegir / Cambiar Mi Dorsal"*, *"Cambiar Dorsal"* y *"🔄 Cambiar de Equipo"*) y conserva los diálogos de cambio de camiseta y traspaso. |
+| `frontend/src/views/RankingView.vue` | Uso de `RankingTableCard` con `v-model`: líneas 86–87; importación: línea 96; objetos `tablaGoleadores` y `tablaAsistidores`: líneas 118–144; marcado original comentado: líneas 2–83. | Reemplaza el HTML duplicado de las dos tablas de la página por dos tarjetas conectadas con `v-model`, manteniendo intactos el diseño, el filtrado por club y las estadísticas. |
+| `frontend/src/components/RankingTableCard.vue` | Estructura de tarjeta y tabla: líneas 1–83; soporte `v-model` (`modelValue` y `update:modelValue`): líneas 90–112; estilos de tabla: líneas 125–197; incluye `RankingScoreBadge` con `:` en la línea 65. | Dibuja las tarjetas de *Tabla de Goleadores* y *Máximos Asistidores* (encabezado, medallas de podio oro/plata/bronce, dorsal, punto del club y mensaje vacío) desde un único lugar. |
+| `frontend/src/components/RankingScoreBadge.vue` | Presentación del valor de goles/asistencias recibido mediante `:`: líneas 1–28. | Muestra la insignia de puntaje al final de cada fila en la página de Ranking: etiqueta naranja con `⚽` para goles y azul con `🎯` para asistencias. |
 
 `frontend/src/views/FixtureView.vue` no se modificó para estos cambios; sus botones y estilos permanecen como estaban.
 
