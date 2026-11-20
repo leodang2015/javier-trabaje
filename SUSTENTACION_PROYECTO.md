@@ -113,9 +113,15 @@ Este documento está estructurado para responder de forma precisa, profesional y
 │       │   │   └── torneoStore.js     # Torneo.js y Notificaciones
 │       │   └── torneo.js              # Orquestador reactivo unificado (useTorneo)
 │       ├── components/                # Diálogos y componentes visuales reutilizables
-│       │   ├── AppActionButton.vue     # Botón compartido (@click y estilos configurables)
-│       │   ├── RankingTableCard.vue    # Tarjeta reutilizable de ranking conectada con v-model
-│       │   ├── RankingScoreBadge.vue   # Insignia de goles/asistencias conectada con :
+│       │   ├── AppActionButton.vue          # Botón compartido (@click y estilos configurables)
+│       │   ├── PosicionesTableCard.vue      # Tabla oficial de posiciones, filtro y racha
+│       │   ├── PartidosRecientesCard.vue    # Resumen lateral de partidos recientes o del club
+│       │   ├── ResumenRankingCard.vue       # Tarjeta unificada de Top Goleadores y Top Asistidores
+│       │   ├── ClubesListaCard.vue          # Lista lateral de clubes conectada con v-model
+│       │   ├── PlantelTableCard.vue         # Tabla de plantel del club (dorsales, sanciones y tarjetas)
+│       │   ├── EntrenadorPlantelListCard.vue # Lista de participantes en la pizarra táctica del DT
+│       │   ├── RankingTableCard.vue         # Tarjeta reutilizable de ranking conectada con v-model
+│       │   ├── RankingScoreBadge.vue        # Insignia de goles/asistencias conectada con :
 │       │   ├── PartidoDialog.vue       # Modal de creación y configuración de partidos
 │       │   ├── EquipoDialog.vue        # Modal de creación de clubes
 │       │   └── JugadorDialog.vue       # Modal de registro e inscripción de futbolistas
@@ -147,7 +153,7 @@ Hay dos archivos llamados `torneo.js`, pero no mantienen estados separados: `fro
 
 `AppActionButton.vue` reutiliza el botón de Quasar en las vistas de inscripción, posiciones y equipos usando `@click` para emitir las interacciones. Centraliza colores, tipografía y redondeo sin alterar en pantalla las acciones, rutas ni permisos por rol.
 
-En Ranking, `RankingView.vue` conserva los cálculos de goleadores y asistidores y delega la presentación en `RankingTableCard.vue` mediante `v-model`; cada cifra se representa con `RankingScoreBadge.vue` conectado con `:` (`:valor` y `:campo`) para distinguir visualmente goles (`⚽` naranja) y asistencias (`🎯` azul) sin duplicar la estructura de la tabla.
+Todas las tablas y listados tabulares de la aplicación están componentizados: `PosicionesTableCard.vue` renderiza la tabla general de posiciones con su buscador (`v-model`), `PartidosRecientesCard.vue` y `ResumenRankingCard.vue` organizan los resúmenes laterales de partidos, Top Goleadores y Top Asistidores, `ClubesListaCard.vue` y `PlantelTableCard.vue` separan la lista de clubes y el plantel en `EquiposView.vue`, `EntrenadorPlantelListCard.vue` gestiona la lista de participantes de la pizarra táctica en `EntrenadorView.vue`, y en Ranking `RankingView.vue` delega la presentación en `RankingTableCard.vue` mediante `v-model` usando `RankingScoreBadge.vue` con `:` (`:valor` y `:campo`) para distinguir goles (`⚽` naranja) y asistencias (`🎯` azul).
 
 **¿Por qué se organizó así?**
 > *"Adoptamos una arquitectura desacoplada por responsabilidades (**Separation of Concerns**). En el backend, `controllers` concentra estrictamente las reglas del negocio futbolístico, `routes` expone los endpoints limpios y `models` garantiza la integridad de datos en MongoDB Atlas. En el frontend, separamos las `views` de los `components`, y modularizamos el `store` en submódulos que reflejan directamente cada entidad de la base de datos, canalizados a través de `torneo.js` para asegurar coherencia en tiempo real en toda la interfaz."*

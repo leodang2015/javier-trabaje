@@ -3,87 +3,15 @@
     <div class="row q-col-gutter-lg">
       <!-- Columna Izquierda: Lista de Clubes -->
       <div class="col-12 col-md-4">
-        <q-card flat bordered class="bg-white rounded-borders overflow-hidden">
-          <q-card-section class="q-py-md bg-slate-50 border-b">
-            <div>
-              <div class="text-subtitle1 text-weight-bold text-dark">Clubes del Torneo</div>
-              <div class="text-caption text-grey-6">{{ clubesVisibles.length }} equipos registrados</div>
-            </div>
-          </q-card-section>
-
-          <q-list separator class="club-list">
-            <q-item
-              v-for="e in clubesVisibles"
-              :key="e.id || e._id"
-              clickable
-              :active="(e.id || e._id) === seleccionId"
-              active-class="active-club-item"
-              class="q-py-md"
-              @click="seleccionId = (e.id || e._id)"
-            >
-              <q-item-section avatar>
-                <div class="club-list-badge-box" :style="{ backgroundColor: e.escudocolor || e.color || '#059669' }">
-                  <img
-                    v-if="e.escudoUrl"
-                    :src="e.escudoUrl"
-                    alt="Escudo"
-                    class="club-list-badge-img"
-                  />
-                  <span v-else-if="e.escudoFigura" class="club-list-badge-emoji">{{ e.escudoFigura }}</span>
-                  <span v-else class="club-list-badge-dot" />
-                </div>
-              </q-item-section>
-
-              <q-item-section>
-                <div class="row items-center justify-between no-wrap">
-                  <div class="row items-center no-wrap ellipsis">
-                    <q-item-label class="text-weight-bold text-dark ellipsis">{{ e.nombre }}</q-item-label>
-                    <q-badge
-                      v-if="e.estadoAprobacion === 'Pendiente'"
-                      color="amber-9"
-                      text-color="white"
-                      class="q-ml-xs text-weight-bolder font-10"
-                    >
-                      Pendiente Autorización
-                    </q-badge>
-                    <q-badge
-                      v-if="store.esJugador && (e.id === store.miEquipoId || e._id === store.miEquipoId)"
-                      color="indigo-7"
-                      text-color="white"
-                      size="xs"
-                      class="q-ml-xs text-weight-bold"
-                    >
-                      Tu Club
-                    </q-badge>
-                  </div>
-                  <q-badge
-                    :color="store.equipoHabilitadoParaJugar(e.id || e._id) ? 'positive' : 'grey-7'"
-                    text-color="white"
-                    size="xs"
-                    class="q-ml-xs text-weight-bold"
-                  >
-                    {{ store.cantidadJugadoresEquipo(e.id || e._id) }}/11 jug.
-                  </q-badge>
-                </div>
-                <q-item-label caption class="text-grey-6">
-                  {{ e.barriada || e.barrio || 'Sede Barrial' }} · DT: {{ e.capitan || e.tecnico || 'Sin asignar' }}
-                </q-item-label>
-              </q-item-section>
-
-              <q-item-section side>
-                <q-icon :name="matChevronRight" color="grey-5" size="18px" />
-              </q-item-section>
-            </q-item>
-
-            <q-item v-if="!store.equipos.length" class="q-py-xl text-center">
-              <q-item-section class="text-grey-6">
-                <q-icon :name="matGroups" size="36px" color="grey-4" class="q-mx-auto q-mb-xs" />
-                <div class="text-body2 text-weight-medium">Sin equipos registrados</div>
-                <div class="text-caption q-mt-xs">Los clubes son creados automáticamente por cada entrenador al registrarse.</div>
-              </q-item-section>
-            </q-item>
-          </q-list>
-        </q-card>
+        <ClubesListaCard
+          v-model="seleccionId"
+          :clubes="clubesVisibles"
+          :total-equipos="store.equipos.length"
+          :es-jugador="store.esJugador"
+          :mi-equipo-id="store.miEquipoId"
+          :equipo-habilitado="store.equipoHabilitadoParaJugar"
+          :cantidad-jugadores="store.cantidadJugadoresEquipo"
+        />
       </div>
 
       <!-- Columna Derecha: Detalle del Club y Plantel Oficial -->
@@ -287,139 +215,13 @@
             </div>
 
             <!-- Tabla de Plantel -->
-            <div class="q-pa-md">
-              <div class="row items-center justify-between q-mb-sm">
-                <div>
-                  <div class="text-subtitle2 text-weight-bold text-dark row items-center q-gutter-xs">
-                    <span>Plantel Oficial del Club</span>
-                    <q-badge v-if="esMiClub" color="indigo-7" text-color="white" class="font-10 text-weight-bold">
-                      ⭐ Tu Club
-                    </q-badge>
-                  </div>
-                  <div v-if="!store.esJugador" class="text-caption text-grey-7 font-mono">
-                    {{ plantel.length }} en nómina ·
-                    <span :class="store.cantidadEnCancha(equipoSeleccionado?.id) > 11 ? 'text-negative text-weight-bolder' : 'text-emerald-8 text-weight-bold'">
-                      {{ store.cantidadEnCancha(equipoSeleccionado?.id) }}/11 en cancha
-                    </span>
-                    <span v-if="store.cantidadEnCancha(equipoSeleccionado?.id) > 11" class="text-negative text-weight-bolder q-ml-xs">
-                      ⚠️ (Excedido en +{{ store.cantidadEnCancha(equipoSeleccionado?.id) - 11 }})
-                    </span>
-                    · {{ store.cantidadEnBanca(equipoSeleccionado?.id) }} en banca
-                  </div>
-                  <div v-else class="text-caption text-grey-7 font-mono">
-                    {{ plantel.length }} futbolistas inscritos · Plantel público oficial
-                  </div>
-                </div>
-                <q-btn
-                  v-if="!store.esJugador && store.cantidadEnCancha(equipoSeleccionado?.id) > 11"
-                  unelevated
-                  dense
-                  size="sm"
-                  color="negative"
-                  no-caps
-                  label="Enviar excedentes a banca"
-                  @click="store.enviarExcedentesABanca(equipoSeleccionado?.id)"
-                />
-              </div>
-
-              <div class="table-responsive">
-                <table class="roster-table">
-                  <thead>
-                    <tr>
-                      <th class="th-dorsal text-center">Dorsal</th>
-                      <th class="th-name text-left">Jugador</th>
-                      <th class="th-pos text-center">Posición / Rol</th>
-                      <th class="th-goles text-center">Goles</th>
-                      <th class="th-cards text-center">Tarjetas</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr
-                      v-for="j in plantel"
-                      :key="j.id"
-                      class="roster-row"
-                      :class="{ 'bg-indigo-50 border-l-4 border-indigo-7': esElMismoJugador(j) }"
-                    >
-                      <td class="text-center font-mono text-weight-bold text-primary">
-                        <div class="row items-center justify-center q-gutter-xs">
-                          <span class="dorsal-tag">#{{ j.dorsal ?? j.numero ?? '—' }}</span>
-                          <span v-if="j.expulsadoDelTorneo" class="text-negative text-weight-bolder font-10" title="Expulsado del equipo y torneo por 3 rojas">
-                            🚫 EXPULSADO
-                          </span>
-                          <span v-else-if="j.partidosSuspendidosRestantes > 0" class="text-amber-10 text-weight-bolder font-10 bg-amber-100 q-px-xs rounded" :title="j.motivoSancion">
-                            🛑 Suspendido ({{ j.partidosSuspendidosRestantes }} PJ)
-                          </span>
-                          <span v-else-if="j.tarjetasRojasAcumuladas > 0" class="text-negative font-10 font-bold">
-                            🟥 x{{ j.tarjetasRojasAcumuladas }}
-                          </span>
-                          <q-btn
-                            v-if="store.esJugador && esElMismoJugador(j)"
-                            flat
-                            round
-                            dense
-                            size="xs"
-                            color="indigo-7"
-                            :icon="matEdit"
-                            @click="abrirDialogoCambioDorsal(j)"
-                          >
-                            <q-tooltip>Cambiar tu número de camiseta</q-tooltip>
-                          </q-btn>
-                        </div>
-                      </td>
-                      <td class="text-weight-bold text-dark">
-                        <div class="row items-center no-wrap q-gutter-xs">
-                          <span>{{ [j.nombre, j.apellido].filter(Boolean).join(' ') }}</span>
-                          <q-badge
-                            v-if="esElMismoJugador(j)"
-                            color="indigo-7"
-                            text-color="white"
-                            class="text-weight-bolder font-10 q-px-xs"
-                          >
-                            TÚ
-                          </q-badge>
-                          <q-badge
-                            v-if="j.esCapitan || equipo?.capitan === j.nombre"
-                            color="amber-9"
-                            text-color="white"
-                            class="text-weight-bolder font-10 q-px-xs"
-                            title="Capitán Oficial del Club"
-                          >
-                            Ⓒ CAPITÁN
-                          </q-badge>
-                        </div>
-                      </td>
-                      <td class="text-center">
-                        <span
-                          class="pos-badge"
-                          :class="store.normalizarPosicion(j.posicion) === 'banca' ? 'pos-badge-banca' : 'pos-badge-cancha'"
-                        >
-                          {{ store.normalizarPosicion(j.posicion) === 'banca' ? '🪑 En Banca' : (j.posicion || 'Delantero') }}
-                        </span>
-                      </td>
-                      <td class="text-center font-mono text-weight-bold">
-                        {{ j.goles ?? 0 }}
-                      </td>
-                      <td class="text-center">
-                        <span class="card-pill bg-amber-500 text-white q-mr-xs">{{ j.amarillas ?? 0 }}</span>
-                        <span class="card-pill bg-rose-600 text-white">{{ j.rojas ?? 0 }}</span>
-                      </td>
-                    </tr>
-
-                    <tr v-if="!plantel.length">
-                      <td colspan="5" class="text-center q-py-lg text-grey-6">
-                        <div class="q-py-md">
-                          <q-icon :name="matPersonOutline" size="32px" color="grey-4" class="q-mb-xs" />
-                          <div class="text-body2 text-weight-medium">Aún no hay jugadores registrados en este club.</div>
-                          <div class="text-caption text-grey-6 q-mt-xs">
-                            Los futbolistas se incorporan al registrarse con rol jugador (con su clave de acceso) o mediante la nómina completada por el organizador.
-                          </div>
-                        </div>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
+            <PlantelTableCard
+              :plantel="plantel"
+              :equipo="equipo"
+              :es-mi-club="esMiClub"
+              :es-mismo-jugador="esElMismoJugador"
+              @cambiar-dorsal="abrirDialogoCambioDorsal"
+            />
           </template>
 
           <q-card-section v-else class="q-pa-xl text-center text-grey-6">
@@ -657,19 +459,18 @@ import { useQuasar } from 'quasar'
 import { useTorneo, ROLES } from '../store/torneo.js'
 import AppActionButton from '../components/AppActionButton.vue'
 import EquipoDialog from '../components/EquipoDialog.vue'
+import PlantelTableCard from '../components/PlantelTableCard.vue'
+import ClubesListaCard from '../components/ClubesListaCard.vue'
 import {
   matAdd,
   matPersonAdd,
   matChevronRight,
-  matGroups,
-  matPersonOutline,
   matTouchApp,
   matPlace,
   matBadge,
   matSports,
   matShield,
   matNumbers,
-  matEdit,
   matCheckCircle,
   matClose,
   matSwapHoriz
@@ -1009,10 +810,6 @@ const headerGradient = computed(() => {
   flex-shrink: 0;
   display: inline-block;
 }
-.active-club-item {
-  background-color: #f0fdf4 !important;
-  border-left: 3px solid #059669;
-}
 .club-header-banner {
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
@@ -1021,61 +818,6 @@ const headerGradient = computed(() => {
 }
 .opacity-90 {
   opacity: 0.9;
-}
-.table-responsive {
-  overflow-x: auto;
-  width: 100%;
-}
-.roster-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-.roster-table thead th {
-  background-color: #f8fafc;
-  color: #64748b;
-  font-size: 0.74rem;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  padding: 10px 12px;
-  border-bottom: 2px solid #e2e8f0;
-}
-.roster-table tbody td {
-  padding: 10px 12px;
-  font-size: 0.88rem;
-  border-bottom: 1px solid #f1f5f9;
-  vertical-align: middle;
-}
-.roster-row:hover {
-  background-color: #f8fafc;
-}
-.pos-badge {
-  padding: 3px 8px;
-  border-radius: 4px;
-  font-size: 0.74rem;
-  font-weight: 600;
-  display: inline-block;
-}
-.pos-badge-banca {
-  background-color: #f1f5f9;
-  color: #475569;
-  border: 1px dashed #94a3b8;
-}
-.pos-badge-cancha {
-  background-color: #ecfdf5;
-  color: #065f46;
-  border: 1px solid #a7f3d0;
-  font-weight: 700;
-}
-.card-pill {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 18px;
-  height: 18px;
-  border-radius: 3px;
-  font-size: 0.68rem;
-  font-weight: 700;
 }
 .player-jersey-box {
   width: 52px;
@@ -1089,46 +831,6 @@ const headerGradient = computed(() => {
 .jersey-number {
   font-size: 1.35rem;
   letter-spacing: -1px;
-}
-.dorsal-tag {
-  display: inline-block;
-  padding: 2px 6px;
-  border-radius: 4px;
-  background-color: #e0e7ff;
-  color: #3730a3;
-  font-size: 0.85rem;
-}
-
-.club-list-badge-box {
-  width: 32px;
-  height: 32px;
-  min-width: 32px;
-  min-height: 32px;
-  max-width: 32px;
-  max-height: 32px;
-  border-radius: 8px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
-  flex-shrink: 0;
-}
-.club-list-badge-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-.club-list-badge-emoji {
-  font-size: 18px;
-  line-height: 1;
-}
-.club-list-badge-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: white;
 }
 .escudo-view-box {
   width: 64px;

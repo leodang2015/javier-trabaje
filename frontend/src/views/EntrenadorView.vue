@@ -659,152 +659,21 @@
 
         <!-- Columna Derecha: Asignación y Selección de Posición -->
         <div class="col-12 col-lg-5">
-          <q-card flat bordered class="bg-white rounded-borders">
-            <q-card-section class="bg-slate-900 text-white row items-center justify-between q-py-sm">
-              <div class="row items-center q-gutter-xs">
-                <q-icon :name="matSwapHoriz" size="20px" color="amber" />
-                <span class="text-subtitle2 text-weight-bold">Asignar Posiciones de Jugadores</span>
-              </div>
-              <q-badge color="primary" text-color="white" :label="`${jugadoresDelEquipo.length} futbolistas`" />
-            </q-card-section>
-
-            <q-card-section class="q-pa-md">
-              <div class="text-caption text-grey-7 q-mb-md">
-                Como <strong>Entrenador</strong>, selecciona la posición táctica o asigna el rol <strong>"En Banca"</strong> a tus suplentes. Solo pueden jugar 11 en cancha.
-              </div>
-
-              <!-- Notificación de cambio reciente -->
-              <q-banner v-if="mensajeExito" dense rounded class="bg-emerald-1 text-positive q-mb-md text-caption">
-                <template #avatar>
-                  <q-icon :name="matCheckCircle" color="positive" size="18px" />
-                </template>
-                {{ mensajeExito }}
-              </q-banner>
-
-              <!-- Lista de jugadores para asignación rápida -->
-              <div v-if="!jugadoresDelEquipo.length" class="text-center q-py-lg text-grey-6">
-                <q-icon :name="matGroups" size="36px" color="grey-4" class="q-mb-xs" />
-                <div class="text-subtitle2 text-weight-medium text-slate-800">No hay futbolistas en {{ equipoActual?.nombre || 'este club' }} todavía.</div>
-                <div class="text-caption text-grey-6 q-mt-xs">
-                  Los jugadores se integran al iniciar sesión con su cuenta asignada (mediante su contraseña de cuenta) o mediante la nómina oficial completada por el organizador.
-                </div>
-              </div>
-
-              <q-list v-else separator class="rounded-borders overflow-hidden border">
-                <q-item
-                  v-for="j in jugadoresDelEquipo"
-                  :key="j.id"
-                  class="q-py-sm items-center"
-                  :class="{ 'bg-emerald-50': jugadorEditandoId === j.id, 'bg-slate-50 opacity-90': normalizarPos(j.posicion) === 'banca' }"
-                >
-                  <!-- Dorsal -->
-                  <q-item-section avatar style="min-width: 44px">
-                    <div
-                      class="dorsal-badge text-weight-bold text-center"
-                      :style="{ backgroundColor: colorPorPosicion(j.posicion) }"
-                    >
-                      {{ j.numero || j.dorsal || '—' }}
-                    </div>
-                  </q-item-section>
-
-                  <!-- Nombre y Datos -->
-                  <q-item-section>
-                    <div class="row items-center q-gutter-xs">
-                      <span class="text-weight-bold text-slate-800">{{ j.nombre }} {{ j.apellido || '' }}</span>
-                      <q-badge v-if="esElCapitan(j)" color="amber-9" text-color="white" class="text-weight-bolder font-10 q-px-xs">
-                        Ⓒ CAPITÁN OFICIAL
-                      </q-badge>
-                    </div>
-                    <q-item-label caption class="text-grey-6 row items-center q-gutter-xs">
-                      <span>Estado:</span>
-                      <q-badge
-                        :color="badgeColorPorPosicion(j.posicion)"
-                        :label="normalizarPos(j.posicion) === 'banca' ? '🪑 En Banca' : j.posicion || 'Delantero'"
-                        class="text-weight-medium"
-                      />
-                    </q-item-label>
-                  </q-item-section>
-
-                  <!-- Botón rápido Toggle Banca / Cancha y Capitán -->
-                  <q-item-section side class="row items-center no-wrap q-gutter-xs">
-                    <template v-if="puedeEditarPizarra">
-                      <!-- Botón para Nombrar Capitán -->
-                      <q-btn
-                        v-if="!esElCapitan(j)"
-                        dense
-                        flat
-                        round
-                        size="sm"
-                        color="amber-8"
-                        :icon="matMilitaryTech"
-                        title="Nombrar Capitán del Equipo (Ⓒ)"
-                        @click="nombrarCapitan(j)"
-                      />
-
-                      <q-btn
-                        v-if="normalizarPos(j.posicion) === 'banca'"
-                        dense
-                        flat
-                        round
-                        size="sm"
-                        color="positive"
-                        :icon="matArrowUpward"
-                        title="Mover a Titular en Cancha"
-                        @click="cambiarPosicion(j, 'Delantero')"
-                      />
-                      <q-btn
-                        v-else
-                        dense
-                        flat
-                        round
-                        size="sm"
-                        color="blue-grey-6"
-                        :icon="matEventSeat"
-                        title="Enviar a la Banca"
-                        @click="cambiarPosicion(j, 'En Banca')"
-                      />
-
-                      <!-- Selector de Posición en Vivo -->
-                      <q-select
-                        :model-value="normalizarPos(j.posicion) === 'banca' ? 'En Banca' : (j.posicion || 'Delantero')"
-                        :options="posicionesDisponibles"
-                        outlined
-                        dense
-                        options-dense
-                        :loading="actualizandoId === j.id"
-                        :disable="actualizandoId === j.id"
-                        @update:model-value="cambiarPosicion(j, $event)"
-                        style="font-size: 11px; width: 130px;"
-                        bg-color="white"
-                      >
-                        <template #selected-item="scope">
-                          <span class="text-weight-bold text-caption ellipsis">
-                            {{ scope.opt === 'En Banca' ? '🪑 En Banca' : scope.opt }}
-                          </span>
-                        </template>
-                        <template #option="scope">
-                          <q-item v-bind="scope.itemProps" dense>
-                            <q-item-section>
-                              <q-item-label :class="scope.opt === 'En Banca' ? 'text-blue-grey-8 text-weight-bold' : ''">
-                                {{ scope.opt === 'En Banca' ? '🪑 En Banca' : scope.opt }}
-                              </q-item-label>
-                            </q-item-section>
-                          </q-item>
-                        </template>
-                      </q-select>
-                    </template>
-                    <template v-else>
-                      <q-badge
-                        :color="badgeColorPorPosicion(j.posicion)"
-                        :label="normalizarPos(j.posicion) === 'banca' ? '🪑 En Banca' : j.posicion || 'Delantero'"
-                        class="text-weight-bold q-px-sm"
-                      />
-                    </template>
-                  </q-item-section>
-                </q-item>
-              </q-list>
-            </q-card-section>
-          </q-card>
+          <EntrenadorPlantelListCard
+            :jugadores="jugadoresDelEquipo"
+            :equipo-nombre="equipoActual?.nombre || ''"
+            :mensaje-exito="mensajeExito"
+            :jugador-editando-id="jugadorEditandoId"
+            :actualizando-id="actualizandoId"
+            :puede-editar="puedeEditarPizarra"
+            :posiciones-disponibles="posicionesDisponibles"
+            :normalizar-pos="normalizarPos"
+            :color-por-posicion="colorPorPosicion"
+            :badge-color-por-posicion="badgeColorPorPosicion"
+            :es-el-capitan="esElCapitan"
+            @nombrar-capitan="nombrarCapitan"
+            @cambiar-posicion="({ jugador, posicion }) => cambiarPosicion(jugador, posicion)"
+          />
         </div>
       </div>
     </div>
@@ -969,6 +838,7 @@ import { ref, computed, watch, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
 import { useTorneo } from '../store/torneo.js'
+import EntrenadorPlantelListCard from '../components/EntrenadorPlantelListCard.vue'
 import {
   matSports,
   matStadium,

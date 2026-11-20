@@ -65,6 +65,10 @@ También existe `frontend/src/torneo.js`, que funciona como una capa de compatib
 La carpeta `frontend/src/components/` contiene tanto diálogos como componentes visuales compartidos:
 
 - **`AppActionButton.vue`** (`@` / `@click`): envuelve el botón de Quasar y centraliza color, tipografía y bordes, reenviando eventos de clic a las vistas de inscripción, posiciones y equipos.
+- **`PosicionesTableCard.vue`**: encapsula la tabla oficial de posiciones, el filtro de búsqueda (`v-model`) y la leyenda de racha en `PosicionesView.vue`.
+- **`PartidosRecientesCard.vue`** y **`ResumenRankingCard.vue`**: encapsulan las tarjetas laterales de partidos recientes, *Top Goleadores* y *Top Asistidores* en `PosicionesView.vue`.
+- **`ClubesListaCard.vue`** y **`PlantelTableCard.vue`**: encapsulan la lista seleccionable de clubes (`v-model`) y la tabla de nómina del plantel en `EquiposView.vue`.
+- **`EntrenadorPlantelListCard.vue`**: encapsula la lista de participantes en la pizarra táctica del entrenador (`EntrenadorView.vue`).
 - **`RankingTableCard.vue`** (`v-model`): presenta cada tabla de ranking conectada bidireccionalmente desde `RankingView.vue`.
 - **`RankingScoreBadge.vue`** (`:`): muestra los goles (`⚽`) o asistencias (`🎯`) recibiendo sus datos mediante propiedades enlazadas (`:valor` y `:campo`).
 
@@ -106,6 +110,12 @@ Los tonos, la familia y el peso tipográficos, el espaciado entre letras y el re
 │   │   ├── views/                     # Vistas (Posiciones, Fixture, Equipos, Ranking, Entrenador, Inscripción)
 │   │   └── components/                # Diálogos y componentes visuales reutilizables
 │   │       ├── AppActionButton.vue
+│   │       ├── PosicionesTableCard.vue
+│   │       ├── PartidosRecientesCard.vue
+│   │       ├── ResumenRankingCard.vue
+│   │       ├── ClubesListaCard.vue
+│   │       ├── PlantelTableCard.vue
+│   │       ├── EntrenadorPlantelListCard.vue
 │   │       ├── RankingTableCard.vue
 │   │       └── RankingScoreBadge.vue
 │
